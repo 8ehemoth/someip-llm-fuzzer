@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Feedback-guided state-aware SOME/IP fuzzer.
+"""SOME/IP LLM Fuzzer with hybrid local and optional OpenAI guidance.
 
 The current default profile targets Method 14, but the workflow and report
 structure are intended for state-effect fuzzing campaigns more broadly.
@@ -17,7 +17,7 @@ import sys
 import threading
 import textwrap
 import time
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from datetime import datetime
 
 try:
@@ -107,7 +107,7 @@ METHOD_PROFILES = {
 }
 DEFAULT_TARGET_METHODS = [10, 12, 14]
 PAYLOAD_SOURCE = "llm_feedback"
-DEFAULT_OUTPUT_PREFIX = "results/state_feedback"
+DEFAULT_OUTPUT_PREFIX = "results/someip_llm_fuzzer"
 ENV_PATHS = [os.path.join(REPO_ROOT, ".env"), os.path.join(REPO_ROOT, "someip_fuzzer", ".env")]
 
 CANDIDATE_HEADER = [
@@ -149,23 +149,33 @@ def load_dotenv_simple(paths=ENV_PATHS):
                     os.environ[key] = value
 
 
-def env_bool(name, default=False):
-    value = os.environ.get(name)
+def env_value(names, default=None):
+    if isinstance(names, str):
+        names = [names]
+    for name in names:
+        value = os.environ.get(name)
+        if value is not None:
+            return value
+    return default
+
+
+def env_bool(names, default=False):
+    value = env_value(names)
     if value is None:
         return default
     return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
-def env_int(name, default):
+def env_int(names, default):
     try:
-        return int(os.environ.get(name, default))
+        return int(env_value(names, default))
     except (TypeError, ValueError):
         return default
 
 
-def env_float(name, default):
+def env_float(names, default):
     try:
-        return float(os.environ.get(name, default))
+        return float(env_value(names, default))
     except (TypeError, ValueError):
         return default
 
@@ -331,6 +341,83 @@ def live_replay_metrics(rows, candidate_count):
     }
 
 
+def hybrid_paths(output_prefix, stamp):
+    return {
+        "candidates": "{}_hybrid_candidates_{}.csv".format(output_prefix, stamp),
+        "detail": "{}_hybrid_detail_{}.csv".format(output_prefix, stamp),
+        "payload_summary": "{}_hybrid_payload_summary_{}.csv".format(output_prefix, stamp),
+        "summary": "{}_hybrid_summary_{}.csv".format(output_prefix, stamp),
+    }
+
+
+def local_feedback_mutations(candidate, payload_row, round_index, limit=24):
+    payload_hex = normalize_candidate_hex(candidate.get("payload_hex", ""))
+    if not payload_hex:
+        return []
+    try:
+        data = bytearray(bytes.fromhex(payload_hex))
+    except ValueError:
+        return []
+
+    classification = payload_row.get("classification", "")
+    normal_count = safe_int(payload_row.get("normal_response_count", 0))
+    non_trivial_count = safe_int(payload_row.get("non_trivial_state_effect_count", 0))
+    if classification not in (
+        "reproducible_non_trivial_state_effect",
+        "unstable_non_trivial_state_effect",
+        "protocol_valid_no_effect",
+    ) and normal_count <= 0 and non_trivial_count <= 0:
+        return []
+
+    method_id = int(candidate["method_id"])
+    rows = []
+
+    def add(label, mutated_hex, strategy):
+        row = make_candidate(
+            method_id,
+            label,
+            mutated_hex,
+            round_index,
+            strategy,
+            payload_hex,
+            "live feedback from {}".format(classification or "trial result"),
+        )
+        if row is not None:
+            rows.append(row)
+
+    interesting_values = [0x00, 0x01, 0x02, 0x03, 0xFF]
+    for index in range(min(len(data), 8)):
+        original = data[index]
+        for value in interesting_values:
+            if value == original:
+                continue
+            mutated = bytearray(data)
+            mutated[index] = value
+            add("live_byte{}_{}_{}".format(index, value, payload_hex), mutated.hex(), "live_byte_mutation")
+
+    if len(data) < 16:
+        for suffix in ("00", "01", "02", "03", "ff"):
+            add("live_suffix_{}_{}".format(suffix, payload_hex), payload_hex + suffix, "live_suffix_padding")
+            add("live_prefix_{}_{}".format(suffix, payload_hex), suffix + payload_hex, "live_prefix_padding")
+
+    if len(data) > 1:
+        add("live_trunc_tail_{}".format(payload_hex), payload_hex[:-2], "live_length_truncation")
+    if len(data) <= 8:
+        add("live_double_{}".format(payload_hex), payload_hex + payload_hex, "live_length_duplication")
+
+    selected = []
+    seen = set()
+    for row in rows:
+        key = (int(row["method_id"]), row["payload_hex"])
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(row)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
 def summarize_length_outcomes(payload_rows):
     buckets = defaultdict(Counter)
     for row in payload_rows:
@@ -488,7 +575,7 @@ def extract_json_object(text):
 def save_invalid_model_output(method_id, round_index, text):
     path = os.path.join(
         "results",
-        "state_feedback_invalid_model_output_m{}_round_{}_{}.txt".format(method_id, round_index, timestamp()),
+        "someip_llm_fuzzer_invalid_model_output_m{}_round_{}_{}.txt".format(method_id, round_index, timestamp()),
     )
     ensure_parent(path)
     with open(path, "w", encoding="utf-8") as f:
@@ -658,6 +745,172 @@ def generate_candidates(args, method_ids, round_index, context, dashboard=None, 
     return rows
 
 
+def run_hybrid_campaign(args, stamp, dashboard, dashboard_state, deadline):
+    from check_candidate_state_effect import call_someip, next_session_id  # noqa: WPS433
+
+    paths = hybrid_paths(args.output_prefix, stamp)
+    queue = deque()
+    queued_or_done = set()
+    all_candidates = []
+    all_candidates_by_key = {}
+    detail_rows = []
+    round_index = 1
+    session_id = 0x7B00
+    llm_calls = 0
+    llm_method_index = 0
+    next_llm_at = time.time() + args.hybrid_llm_interval_sec
+    payloads_since_hit = 0
+
+    def enqueue(rows, front=False):
+        added = 0
+        for row in rows:
+            if row is None:
+                continue
+            key = (int(row["method_id"]), row["payload_hex"])
+            if key in queued_or_done:
+                continue
+            queued_or_done.add(key)
+            all_candidates_by_key.setdefault(key, row)
+            all_candidates.append(row)
+            if front:
+                queue.appendleft(row)
+            else:
+                queue.append(row)
+            added += 1
+        return added
+
+    initial_context = feedback_context([])
+    for method_id in args.target_method_ids:
+        enqueue(dedupe_candidates(deterministic_seed_pool(method_id, round_index, initial_context), args.candidates_per_round))
+
+    dashboard_state["status"] = "hybrid executing"
+    dashboard_state["round"] = round_index
+    dashboard_state["rounds"] = 0
+    dashboard_state["trials_done"] = 0
+    dashboard_state["trials_total"] = 0
+    dashboard_state["current"] = "hybrid queue initialized"
+    dashboard_state["output"] = paths["payload_summary"]
+    dashboard_state["metrics"] = {
+        "candidate_count": len(all_candidates),
+        "unique_payload_count": len(queued_or_done),
+        "detail_trial_count": 0,
+        "queue_size": len(queue),
+        "llm_calls": llm_calls,
+    }
+    dashboard.render(dashboard_state, force=True)
+
+    while queue and (deadline is None or time.time() < deadline):
+        now = time.time()
+        should_call_llm = (
+            args.use_openai_api
+            and llm_calls < args.hybrid_llm_call_cap
+            and (now >= next_llm_at or payloads_since_hit >= args.hybrid_stagnation_payloads)
+        )
+        if should_call_llm:
+            payload_rows = payload_summary(detail_rows)
+            context = feedback_context([{"payload_rows": payload_rows}])
+            method_id = args.target_method_ids[llm_method_index % len(args.target_method_ids)]
+            llm_method_index += 1
+            dashboard_state["status"] = "planning"
+            dashboard_state["current"] = "hybrid OpenAI m{} call {}/{}".format(
+                method_id,
+                llm_calls + 1,
+                args.hybrid_llm_call_cap,
+            )
+            dashboard.render(dashboard_state, force=True)
+            try:
+                llm_rows = call_openai_candidates(args, method_id, round_index, context, dashboard, dashboard_state)
+                enqueue(dedupe_candidates(llm_rows, args.candidates_per_round))
+                llm_calls += 1
+            except Exception as exc:
+                print("warning: hybrid OpenAI call failed for method {}: {}".format(method_id, exc), file=sys.stderr)
+                llm_calls += 1
+            next_llm_at = time.time() + args.hybrid_llm_interval_sec
+            payloads_since_hit = 0
+            round_index += 1
+
+        candidate = queue.popleft()
+        replay_item = {
+            "payload_source": candidate["payload_source"],
+            "payload_label": candidate["payload_label"],
+            "method_id": candidate["method_id"],
+            "payload_hex": candidate["payload_hex"],
+            "payload_len": candidate["payload_len"],
+        }
+        candidate_rows = []
+        for trial_index in range(1, args.trial_count + 1):
+            if deadline is not None and time.time() >= deadline:
+                break
+            dashboard_state["status"] = "hybrid executing"
+            dashboard_state["round"] = round_index
+            dashboard_state["trials_done"] = len(detail_rows)
+            dashboard_state["trials_total"] = 0
+            dashboard_state["current"] = "m{} {} trial {}/{} queue {}".format(
+                candidate["method_id"],
+                candidate["payload_hex"],
+                trial_index,
+                args.trial_count,
+                len(queue),
+            )
+            dashboard_state["metrics"] = live_replay_metrics(detail_rows, len(all_candidates))
+            dashboard_state["metrics"]["queue_size"] = len(queue)
+            dashboard_state["metrics"]["llm_calls"] = llm_calls
+            dashboard.render(dashboard_state)
+            row, session_id = run_trial(call_someip, next_session_id, replay_item, trial_index, session_id, args.timeout)
+            detail_rows.append(row)
+            candidate_rows.append(row)
+
+        if candidate_rows:
+            candidate_payload_rows = payload_summary(candidate_rows)
+            payload_row = candidate_payload_rows[0] if candidate_payload_rows else {}
+            classification = payload_row.get("classification", "")
+            if payload_row.get("non_trivial_state_effect_count") not in ("", "0", 0) or classification in (
+                "reproducible_non_trivial_state_effect",
+                "unstable_non_trivial_state_effect",
+            ):
+                payloads_since_hit = 0
+                enqueue(local_feedback_mutations(candidate, payload_row, round_index), front=True)
+            else:
+                payloads_since_hit += 1
+                if classification == "protocol_valid_no_effect":
+                    enqueue(local_feedback_mutations(candidate, payload_row, round_index), front=False)
+
+        if not queue and (deadline is None or time.time() < deadline):
+            payload_rows = payload_summary(detail_rows)
+            context = feedback_context([{"payload_rows": payload_rows}])
+            for method_id in args.target_method_ids:
+                enqueue(dedupe_candidates(deterministic_seed_pool(method_id, round_index + 1, context), args.candidates_per_round))
+            round_index += 1
+
+    payload_rows = payload_summary(detail_rows)
+    metrics = round_metrics(payload_rows, detail_rows)
+    metrics["candidate_count"] = len(all_candidates)
+    metrics["queue_size"] = len(queue)
+    metrics["llm_calls"] = llm_calls
+    write_candidate_csv(paths["candidates"], all_candidates)
+    write_csv(paths["detail"], DETAIL_HEADER, detail_rows)
+    write_csv(paths["payload_summary"], PAYLOAD_SUMMARY_HEADER, payload_rows)
+    write_csv(paths["summary"], SUMMARY_HEADER, source_summary(detail_rows, payload_rows))
+    dashboard_state["status"] = "hybrid complete"
+    dashboard_state["current"] = "hybrid campaign complete"
+    dashboard_state["metrics"] = metrics
+    dashboard_state["output"] = paths["payload_summary"]
+    dashboard.render(dashboard_state, force=True)
+    return {
+        "round_records": [{
+            "round_index": 1,
+            "target_method_ids": list(args.target_method_ids),
+            "paths": paths,
+            "candidates": all_candidates,
+            "payload_rows": payload_rows,
+            "detail_rows": detail_rows,
+            "metrics": metrics,
+        }],
+        "all_candidates_by_key": all_candidates_by_key,
+        "paths": paths,
+    }
+
+
 def round_paths(output_prefix, round_index, stamp):
     return {
         "candidates": "{}_round_{}_candidates_{}.csv".format(output_prefix, round_index, stamp),
@@ -794,13 +1047,14 @@ class TerminalDashboard:
         print(self._section("campaign progress", "payload corpus", width))
         self._pair("current round", self._round_label(state), "targets", state.get("targets", ""), width)
         self._pair("trial progress", "{} ({})".format(self._count_label(trials_done, trials_total), progress), "candidates", metrics.get("candidate_count", 0), width)
-        self._pair("unique payloads", metrics.get("unique_payload_count", 0), "mode", state.get("mode", ""), width)
+        self._pair("unique payloads", metrics.get("unique_payload_count", 0), "queue size", metrics.get("queue_size", 0), width)
         self._single("now processing", current, width)
         print(self._section("response summary", "state findings", width))
         self._pair("normal", metrics.get("normal_response_count", 0), "state changed", metrics.get("state_changed_count", 0), width)
         self._pair("errors", metrics.get("error_response_count", 0), "non-trivial", metrics.get("non_trivial_state_effect_count", 0), width)
         self._pair("timeouts", metrics.get("timeout_count", 0), "repro high", metrics.get("reproducible_non_trivial_state_effect_count", 0), width)
         self._pair("valid no effect", metrics.get("protocol_valid_no_effect_count", 0), "trials logged", metrics.get("detail_trial_count", 0), width)
+        self._pair("llm calls", metrics.get("llm_calls", 0), "mode", state.get("mode", ""), width)
         self._single("output", state.get("output", ""), width)
         print(line)
         sys.stdout.flush()
@@ -810,7 +1064,7 @@ class TerminalDashboard:
         print(
             "[dashboard] status={status} round={round}/{rounds} trials={done}/{total} "
             "normal={normal} errors={errors} timeouts={timeouts} non_trivial={nontrivial} "
-            "repro_high={repro} output={output}".format(
+            "repro_high={repro} queue={queue} llm_calls={llm_calls} output={output}".format(
                 status=state.get("status", ""),
                 round=state.get("round", 0),
                 rounds=state.get("rounds", 0),
@@ -821,6 +1075,8 @@ class TerminalDashboard:
                 timeouts=metrics.get("timeout_count", 0),
                 nontrivial=metrics.get("non_trivial_state_effect_count", 0),
                 repro=metrics.get("reproducible_non_trivial_state_effect_count", 0),
+                queue=metrics.get("queue_size", 0),
+                llm_calls=metrics.get("llm_calls", 0),
                 output=state.get("output", ""),
             )
         )
@@ -1068,22 +1324,34 @@ def write_report(path, args, round_records, final_rows):
 
 def parse_args():
     load_dotenv_simple()
-    default_use_openai = env_bool("STATE_FUZZ_USE_OPENAI", bool(os.environ.get("OPENAI_API_KEY", "").strip()))
-    default_execute = env_bool("STATE_FUZZ_EXECUTE", False)
-    parser = argparse.ArgumentParser(description="SOME/IP LLM fuzzer with state-feedback guidance. Defaults can be set in .env.")
-    parser.add_argument("--target-methods", default=os.environ.get("STATE_FUZZ_TARGET_METHODS", "10,12,14"), help="Comma-separated target methods; supported: 10,12,14")
-    parser.add_argument("--rounds", type=int, default=env_int("STATE_FUZZ_ROUNDS", 3))
-    parser.add_argument("--candidates-per-round", type=int, default=env_int("STATE_FUZZ_CANDIDATES_PER_ROUND", 50))
-    parser.add_argument("--trial-count", type=int, default=env_int("STATE_FUZZ_TRIAL_COUNT", 3))
-    parser.add_argument("--final-trial-count", type=int, default=env_int("STATE_FUZZ_FINAL_TRIAL_COUNT", 10))
-    parser.add_argument("--timeout", type=float, default=env_float("STATE_FUZZ_TIMEOUT", 1.0))
+    default_use_openai = env_bool("SOMEIP_LLM_USE_OPENAI", bool(os.environ.get("OPENAI_API_KEY", "").strip()))
+    default_execute = env_bool("SOMEIP_LLM_EXECUTE", False)
+    parser = argparse.ArgumentParser(description="SOME/IP LLM Fuzzer with hybrid feedback guidance. Defaults can be set in .env.")
+    parser.add_argument("--target-methods", default=env_value("SOMEIP_LLM_TARGET_METHODS", "10,12,14"), help="Comma-separated target methods; supported: 10,12,14")
+    parser.add_argument("--rounds", type=int, default=env_int("SOMEIP_LLM_ROUNDS", 3))
+    parser.add_argument("--candidates-per-round", type=int, default=env_int("SOMEIP_LLM_CANDIDATES_PER_ROUND", 50))
+    parser.add_argument("--trial-count", type=int, default=env_int("SOMEIP_LLM_TRIAL_COUNT", 3))
+    parser.add_argument("--final-trial-count", type=int, default=env_int("SOMEIP_LLM_FINAL_TRIAL_COUNT", 10))
+    parser.add_argument("--timeout", type=float, default=env_float("SOMEIP_LLM_TIMEOUT", 1.0))
     parser.add_argument(
         "--duration-sec",
         "--max-runtime",
         type=parse_duration_sec,
-        default=parse_duration_sec(os.environ.get("STATE_FUZZ_DURATION_SEC", "0")),
+        default=parse_duration_sec(env_value("SOMEIP_LLM_DURATION_SEC", "0")),
         help="Run for at least this wall-clock budget by continuing rounds until time expires. Accepts seconds, 30m, or 1h.",
     )
+    hybrid_group = parser.add_mutually_exclusive_group()
+    hybrid_group.add_argument("--hybrid-feedback", dest="hybrid_feedback", action="store_true")
+    hybrid_group.add_argument("--no-hybrid-feedback", dest="hybrid_feedback", action="store_false")
+    parser.set_defaults(hybrid_feedback=env_bool("SOMEIP_LLM_HYBRID_FEEDBACK", True))
+    parser.add_argument(
+        "--hybrid-llm-interval-sec",
+        type=parse_duration_sec,
+        default=parse_duration_sec(env_value("SOMEIP_LLM_HYBRID_LLM_INTERVAL_SEC", "3m")),
+        help="Minimum time between hybrid OpenAI seed requests.",
+    )
+    parser.add_argument("--hybrid-llm-call-cap", type=int, default=env_int("SOMEIP_LLM_HYBRID_LLM_CALL_CAP", 10))
+    parser.add_argument("--hybrid-stagnation-payloads", type=int, default=env_int("SOMEIP_LLM_HYBRID_STAGNATION_PAYLOADS", 200))
     openai_group = parser.add_mutually_exclusive_group()
     openai_group.add_argument("--use-openai-api", dest="use_openai_api", action="store_true")
     openai_group.add_argument("--no-openai-api", dest="use_openai_api", action="store_false")
@@ -1093,9 +1361,9 @@ def parse_args():
     mode_group.add_argument("--dry-run", dest="execute", action="store_false")
     mode_group.add_argument("--execute", dest="execute", action="store_true")
     parser.set_defaults(execute=default_execute)
-    parser.add_argument("--dashboard", dest="dashboard", action="store_true", default=env_bool("STATE_FUZZ_DASHBOARD", True))
+    parser.add_argument("--dashboard", dest="dashboard", action="store_true", default=env_bool("SOMEIP_LLM_DASHBOARD", True))
     parser.add_argument("--no-dashboard", dest="dashboard", action="store_false")
-    parser.add_argument("--output-prefix", default=os.environ.get("STATE_FUZZ_OUTPUT_PREFIX", DEFAULT_OUTPUT_PREFIX))
+    parser.add_argument("--output-prefix", default=env_value("SOMEIP_LLM_OUTPUT_PREFIX", DEFAULT_OUTPUT_PREFIX))
     return parser.parse_args()
 
 
@@ -1125,6 +1393,12 @@ def validate_args(args):
         raise SystemExit("--final-trial-count must be positive")
     if args.duration_sec < 0:
         raise SystemExit("--duration-sec must be non-negative")
+    if args.hybrid_llm_interval_sec <= 0:
+        raise SystemExit("--hybrid-llm-interval-sec must be positive")
+    if args.hybrid_llm_call_cap < 0:
+        raise SystemExit("--hybrid-llm-call-cap must be non-negative")
+    if args.hybrid_stagnation_payloads <= 0:
+        raise SystemExit("--hybrid-stagnation-payloads must be positive")
     args.target_method_ids = parse_target_methods(args.target_methods)
     if args.use_openai_api and not os.environ.get("OPENAI_API_KEY", "").strip():
         raise SystemExit("OPENAI_API_KEY is required when OpenAI planning is enabled")
@@ -1159,6 +1433,41 @@ def main():
         "deadline": deadline,
     }
     dashboard.render(dashboard_state, force=True)
+
+    if args.execute and args.duration_sec > 0 and args.hybrid_feedback:
+        result = run_hybrid_campaign(args, stamp, dashboard, dashboard_state, deadline)
+        round_records = result["round_records"]
+        all_candidates_by_key = result["all_candidates_by_key"]
+        print("hybrid candidates={} detail={} payload_summary={}".format(
+            len(round_records[0]["candidates"]),
+            result["paths"]["detail"],
+            result["paths"]["payload_summary"],
+        ))
+        final_path = "{}_final_high_value_{}.csv".format(args.output_prefix, stamp)
+        report_path = "{}_report_{}.md".format(args.output_prefix, stamp)
+        final_rows = []
+        prior_payload_rows = list(round_records[0]["payload_rows"])
+        high_value_payloads = [
+            (int(row.get("method_id", 0)), row["payload_hex"])
+            for row in prior_payload_rows
+            if row.get("classification") in ("reproducible_non_trivial_state_effect", "unstable_non_trivial_state_effect")
+        ]
+        final_candidates = [all_candidates_by_key[key] for key in dict.fromkeys(high_value_payloads) if key in all_candidates_by_key]
+        if final_candidates:
+            dashboard_state["status"] = "final verification"
+            dashboard_state["current"] = "{} high-value candidates".format(len(final_candidates))
+            dashboard.render(dashboard_state, force=True)
+            detail_rows = run_replay(final_candidates, args.final_trial_count, args.timeout, dashboard, dashboard_state, None)
+            payload_rows = payload_summary(detail_rows)
+            final_rows = annotate_final_rows(all_candidates_by_key, payload_rows)
+        write_final_high_value(final_path, final_rows)
+        write_report(report_path, args, round_records, final_rows)
+        print("wrote {}".format(final_path))
+        print("wrote {}".format(report_path))
+        dashboard_state["status"] = "done"
+        dashboard_state["output"] = report_path
+        dashboard.render(dashboard_state, force=True)
+        return
 
     round_index = 1
     while True:
