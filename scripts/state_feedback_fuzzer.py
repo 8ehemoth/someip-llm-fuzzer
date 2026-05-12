@@ -15,6 +15,7 @@ import re
 import shutil
 import sys
 import threading
+import textwrap
 import time
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -169,6 +170,34 @@ def env_float(name, default):
         return default
 
 
+def parse_duration_sec(value):
+    text = str(value or "").strip().lower()
+    if not text:
+        return 0
+    multipliers = {
+        "s": 1,
+        "sec": 1,
+        "secs": 1,
+        "m": 60,
+        "min": 60,
+        "mins": 60,
+        "h": 3600,
+        "hr": 3600,
+        "hrs": 3600,
+    }
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)([a-z]*)", text)
+    if not match:
+        raise argparse.ArgumentTypeError("duration must look like 1800, 30m, or 1h")
+    amount = float(match.group(1))
+    suffix = match.group(2) or "s"
+    if suffix not in multipliers:
+        raise argparse.ArgumentTypeError("unsupported duration suffix: {}".format(suffix))
+    seconds = int(amount * multipliers[suffix])
+    if seconds < 0:
+        raise argparse.ArgumentTypeError("duration must be non-negative")
+    return seconds
+
+
 def timestamp():
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -286,6 +315,19 @@ def round_metrics(payload_rows, detail_rows):
         "reproducible_non_trivial_state_effect_count": len(classed.get("reproducible_non_trivial_state_effect", [])),
         "protocol_valid_no_effect_count": len(classed.get("protocol_valid_no_effect", [])),
         "detail_trial_count": len(detail_rows),
+    }
+
+
+def live_replay_metrics(rows, candidate_count):
+    return {
+        "candidate_count": candidate_count,
+        "detail_trial_count": len(rows),
+        "normal_response_count": sum(1 for row in rows if row.get("verdict") == "normal_response"),
+        "error_response_count": sum(1 for row in rows if row.get("verdict") == "error_response"),
+        "timeout_count": sum(1 for row in rows if row.get("verdict") == "no_response_timeout"),
+        "state_changed_count": sum(1 for row in rows if row.get("state_changed") == "True"),
+        "non_trivial_state_effect_count": sum(1 for row in rows if row.get("non_trivial_state_effect") == "True"),
+        "unique_payload_count": len({row.get("payload_hex", "") for row in rows}),
     }
 
 
@@ -625,7 +667,7 @@ def round_paths(output_prefix, round_index, stamp):
     }
 
 
-def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_state=None):
+def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_state=None, deadline=None):
     from check_candidate_state_effect import call_someip, next_session_id  # noqa: WPS433
 
     rows = []
@@ -633,6 +675,8 @@ def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_s
     total_trials = len(candidates) * trial_count
     done = 0
     for item in candidates:
+        if deadline is not None and time.time() >= deadline:
+            break
         replay_item = {
             "payload_source": item["payload_source"],
             "payload_label": item["payload_label"],
@@ -641,6 +685,8 @@ def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_s
             "payload_len": item["payload_len"],
         }
         for trial_index in range(1, trial_count + 1):
+            if deadline is not None and time.time() >= deadline:
+                break
             if dashboard is not None and dashboard_state is not None:
                 dashboard_state["status"] = "executing"
                 dashboard_state["trials_done"] = done
@@ -655,6 +701,10 @@ def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_s
             row, session_id = run_trial(call_someip, next_session_id, replay_item, trial_index, session_id, timeout_sec)
             rows.append(row)
             done += 1
+            if dashboard is not None and dashboard_state is not None:
+                dashboard_state["trials_done"] = done
+                dashboard_state["metrics"] = live_replay_metrics(rows, len(candidates))
+                dashboard.render(dashboard_state)
     if dashboard is not None and dashboard_state is not None:
         dashboard_state["trials_done"] = done
         dashboard_state["trials_total"] = total_trials
@@ -699,7 +749,7 @@ def write_final_high_value(path, rows):
 
 
 class TerminalDashboard:
-    def __init__(self, enabled, title="SOME/IP State Feedback Fuzzer"):
+    def __init__(self, enabled, title="SOME/IP LLM Fuzzer"):
         self.enabled = enabled
         self.title = title
         self.is_tty = sys.stdout.isatty()
@@ -719,44 +769,39 @@ class TerminalDashboard:
             self._render_line(state)
 
     def _render_tty(self, state):
-        cols = max(80, shutil.get_terminal_size((100, 24)).columns)
-        width = min(cols, 110)
+        cols = shutil.get_terminal_size((100, 24)).columns
+        width = max(40, min(cols, 120))
         line = "+" + "-" * (width - 2) + "+"
         elapsed = int(time.time() - self.started_at)
         metrics = state.get("metrics", {})
         status = state.get("status", "initializing")
         current = state.get("current", "")
+        trials_done = int(state.get("trials_done", 0) or 0)
+        trials_total = int(state.get("trials_total", 0) or 0)
+        progress = self._percent(trials_done, trials_total)
+        exec_rate = self._rate(trials_done, elapsed)
+        time_limit = int(state.get("duration_sec") or 0)
+        remaining = max(0, int(state.get("deadline", 0) - time.time())) if state.get("deadline") else 0
         print("\033[2J\033[H", end="")
-        print(line)
-        print(self._row(self.title, width))
-        print(line)
-        print(self._row("status: {} | elapsed: {}s | mode: {} | openai: {} | model: {}".format(
-            status,
-            elapsed,
-            state.get("mode", ""),
-            state.get("openai", ""),
-            state.get("model", "") or "n/a",
-        ), width))
-        print(self._row("targets: {} | round: {}/{} | candidates/target/round: {}".format(
-            state.get("targets", ""),
-            state.get("round", 0),
-            state.get("rounds", 0),
-            state.get("candidates_per_round", 0),
-        ), width))
-        print(self._row("trial progress: {}/{} | current: {}".format(
-            state.get("trials_done", 0),
-            state.get("trials_total", 0),
-            current,
-        ), width))
-        print(line)
-        print(self._row("normal: {} | errors: {} | timeouts: {} | non-trivial: {} | reproducible: {}".format(
-            metrics.get("normal_response_count", 0),
-            metrics.get("error_response_count", 0),
-            metrics.get("timeout_count", 0),
-            metrics.get("non_trivial_state_effect_count", 0),
-            metrics.get("reproducible_non_trivial_state_effect_count", 0),
-        ), width))
-        print(self._row("outputs: {}".format(state.get("output", "")), width))
+        print(self._title(self.title, width))
+        print(self._section("process timing", "overall results", width))
+        self._pair("run time", self._fmt_duration(elapsed), "rounds done", max(0, state.get("round", 0) - 1), width)
+        if time_limit > 0:
+            self._pair("time limit", self._fmt_duration(time_limit), "time left", self._fmt_duration(remaining), width)
+        else:
+            self._pair("time limit", "none", "time left", "n/a", width)
+        self._pair("status", status, "exec/sec", exec_rate, width)
+        print(self._section("campaign progress", "payload corpus", width))
+        self._pair("current round", self._round_label(state), "targets", state.get("targets", ""), width)
+        self._pair("trial progress", "{} ({})".format(self._count_label(trials_done, trials_total), progress), "candidates", metrics.get("candidate_count", 0), width)
+        self._pair("unique payloads", metrics.get("unique_payload_count", 0), "mode", state.get("mode", ""), width)
+        self._single("now processing", current, width)
+        print(self._section("response summary", "state findings", width))
+        self._pair("normal", metrics.get("normal_response_count", 0), "state changed", metrics.get("state_changed_count", 0), width)
+        self._pair("errors", metrics.get("error_response_count", 0), "non-trivial", metrics.get("non_trivial_state_effect_count", 0), width)
+        self._pair("timeouts", metrics.get("timeout_count", 0), "repro high", metrics.get("reproducible_non_trivial_state_effect_count", 0), width)
+        self._pair("valid no effect", metrics.get("protocol_valid_no_effect_count", 0), "trials logged", metrics.get("detail_trial_count", 0), width)
+        self._single("output", state.get("output", ""), width)
         print(line)
         sys.stdout.flush()
 
@@ -764,7 +809,8 @@ class TerminalDashboard:
         metrics = state.get("metrics", {})
         print(
             "[dashboard] status={status} round={round}/{rounds} trials={done}/{total} "
-            "normal={normal} errors={errors} non_trivial={nontrivial} output={output}".format(
+            "normal={normal} errors={errors} timeouts={timeouts} non_trivial={nontrivial} "
+            "repro_high={repro} output={output}".format(
                 status=state.get("status", ""),
                 round=state.get("round", 0),
                 rounds=state.get("rounds", 0),
@@ -772,17 +818,120 @@ class TerminalDashboard:
                 total=state.get("trials_total", 0),
                 normal=metrics.get("normal_response_count", 0),
                 errors=metrics.get("error_response_count", 0),
+                timeouts=metrics.get("timeout_count", 0),
                 nontrivial=metrics.get("non_trivial_state_effect_count", 0),
+                repro=metrics.get("reproducible_non_trivial_state_effect_count", 0),
                 output=state.get("output", ""),
             )
         )
 
     def _row(self, text, width):
-        text = str(text)
         max_len = width - 4
-        if len(text) > max_len:
-            text = text[: max_len - 3] + "..."
-        return "| " + text.ljust(max_len) + " |"
+        return "| " + self._fit(text, max_len).ljust(max_len) + " |"
+
+    def _fit(self, text, width):
+        text = str(text)
+        if width <= 0:
+            return ""
+        if len(text) <= width:
+            return text
+        if width <= 3:
+            return text[:width]
+        return text[: width - 3] + "..."
+
+    def _title(self, text, width):
+        inner = width - 2
+        label = " {} ".format(self._fit(text, inner - 2))
+        pad = max(0, inner - len(label))
+        left = pad // 2
+        right = pad - left
+        return "+" + "-" * left + label + "-" * right + "+"
+
+    def _section(self, left, right, width):
+        inner = width - 2
+        left_label = " {} ".format(left)
+        right_label = " {} ".format(right)
+        left_width = max(1, (inner - 1) // 2)
+        right_width = max(1, inner - 1 - left_width)
+        return (
+            "+"
+            + self._fit(left_label, left_width).ljust(left_width, "-")
+            + "-"
+            + self._fit(right_label, right_width).rjust(right_width, "-")
+            + "+"
+        )
+
+    def _pair(self, left_key, left_value, right_key, right_value, width):
+        inner = width - 4
+        gap = 3
+        left_width = max(1, (inner - gap) // 2)
+        right_width = max(1, inner - gap - left_width)
+        left_lines = self._field_lines(left_key, left_value, left_width)
+        right_lines = self._field_lines(right_key, right_value, right_width)
+        count = max(len(left_lines), len(right_lines))
+        for index in range(count):
+            left = left_lines[index] if index < len(left_lines) else ""
+            right = right_lines[index] if index < len(right_lines) else ""
+            print("| " + left.ljust(left_width) + " " * gap + right.ljust(right_width) + " |")
+
+    def _field_lines(self, key, value, width):
+        prefix = "{:<14}: ".format(str(key))
+        if len(prefix) >= width:
+            return [self._fit(prefix.rstrip(), width)]
+        value_width = max(1, width - len(prefix))
+        chunks = textwrap.wrap(
+            str(value),
+            width=value_width,
+            break_long_words=True,
+            break_on_hyphens=False,
+        ) or [""]
+        lines = [prefix + chunks[0]]
+        continuation = " " * len(prefix)
+        for chunk in chunks[1:]:
+            lines.append(continuation + chunk)
+        return lines
+
+    def _single(self, key, value, width):
+        text = "{:<14}: {}".format(str(key), value)
+        max_len = width - 4
+        lines = textwrap.wrap(
+            text,
+            width=max_len,
+            break_long_words=True,
+            break_on_hyphens=False,
+        ) or [""]
+        for line in lines:
+            print("| " + line.ljust(max_len) + " |")
+
+    def _round_label(self, state):
+        if state.get("duration_sec"):
+            return "{} / time-boxed".format(state.get("round", 0))
+        return "{}/{}".format(state.get("round", 0), state.get("rounds", 0))
+
+    def _fmt_duration(self, seconds):
+        seconds = max(0, int(seconds))
+        minutes, sec = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        if hours:
+            return "{}h{:02d}m{:02d}s".format(hours, minutes, sec)
+        if minutes:
+            return "{}m{:02d}s".format(minutes, sec)
+        return "{}s".format(sec)
+
+    def _count_label(self, done, total):
+        if total > 0:
+            return "{}/{}".format(done, total)
+        return str(done)
+
+    def _percent(self, done, total):
+        if total <= 0:
+            return "n/a"
+        return "{:.1f}%".format((float(done) / float(total)) * 100.0)
+
+    def _rate(self, count, elapsed):
+        if elapsed <= 0:
+            return "0.00"
+        return "{:.2f}".format(float(count) / float(elapsed))
 
 
 def latest_radamsa_summary_rows():
@@ -858,7 +1007,7 @@ def write_report(path, args, round_records, final_rows):
     errors = classed.get("rejected_or_error", []) + classed.get("timeout_or_no_response", [])
 
     lines = [
-        "# SOME/IP State Feedback Fuzzer Report",
+        "# SOME/IP LLM Fuzzer Report",
         "",
         "Target methods: `{}`.".format(",".join(str(x) for x in args.target_method_ids)),
         "",
@@ -921,13 +1070,20 @@ def parse_args():
     load_dotenv_simple()
     default_use_openai = env_bool("STATE_FUZZ_USE_OPENAI", bool(os.environ.get("OPENAI_API_KEY", "").strip()))
     default_execute = env_bool("STATE_FUZZ_EXECUTE", False)
-    parser = argparse.ArgumentParser(description="Feedback-guided state-aware SOME/IP fuzzer. Defaults can be set in .env.")
+    parser = argparse.ArgumentParser(description="SOME/IP LLM fuzzer with state-feedback guidance. Defaults can be set in .env.")
     parser.add_argument("--target-methods", default=os.environ.get("STATE_FUZZ_TARGET_METHODS", "10,12,14"), help="Comma-separated target methods; supported: 10,12,14")
     parser.add_argument("--rounds", type=int, default=env_int("STATE_FUZZ_ROUNDS", 3))
     parser.add_argument("--candidates-per-round", type=int, default=env_int("STATE_FUZZ_CANDIDATES_PER_ROUND", 50))
     parser.add_argument("--trial-count", type=int, default=env_int("STATE_FUZZ_TRIAL_COUNT", 3))
     parser.add_argument("--final-trial-count", type=int, default=env_int("STATE_FUZZ_FINAL_TRIAL_COUNT", 10))
     parser.add_argument("--timeout", type=float, default=env_float("STATE_FUZZ_TIMEOUT", 1.0))
+    parser.add_argument(
+        "--duration-sec",
+        "--max-runtime",
+        type=parse_duration_sec,
+        default=parse_duration_sec(os.environ.get("STATE_FUZZ_DURATION_SEC", "0")),
+        help="Run for at least this wall-clock budget by continuing rounds until time expires. Accepts seconds, 30m, or 1h.",
+    )
     openai_group = parser.add_mutually_exclusive_group()
     openai_group.add_argument("--use-openai-api", dest="use_openai_api", action="store_true")
     openai_group.add_argument("--no-openai-api", dest="use_openai_api", action="store_false")
@@ -967,6 +1123,8 @@ def validate_args(args):
         raise SystemExit("--trial-count must be positive")
     if args.final_trial_count <= 0:
         raise SystemExit("--final-trial-count must be positive")
+    if args.duration_sec < 0:
+        raise SystemExit("--duration-sec must be non-negative")
     args.target_method_ids = parse_target_methods(args.target_methods)
     if args.use_openai_api and not os.environ.get("OPENAI_API_KEY", "").strip():
         raise SystemExit("OPENAI_API_KEY is required when OpenAI planning is enabled")
@@ -981,6 +1139,8 @@ def main():
     round_records = []
     all_candidates_by_key = {}
     dashboard = TerminalDashboard(args.dashboard)
+    campaign_started = time.time()
+    deadline = campaign_started + args.duration_sec if args.duration_sec > 0 else None
     dashboard_state = {
         "status": "starting",
         "mode": "execute" if args.execute else "dry-run",
@@ -995,16 +1155,30 @@ def main():
         "current": "",
         "output": args.output_prefix,
         "metrics": {},
+        "duration_sec": args.duration_sec,
+        "deadline": deadline,
     }
     dashboard.render(dashboard_state, force=True)
 
-    for round_index in range(1, args.rounds + 1):
+    round_index = 1
+    while True:
+        if deadline is None and round_index > args.rounds:
+            break
+        if deadline is not None and time.time() >= deadline:
+            break
         context = feedback_context(round_records)
         dashboard_state["status"] = "planning"
         dashboard_state["round"] = round_index
         dashboard_state["current"] = "generating candidates"
         dashboard.render(dashboard_state, force=True)
         candidates = generate_candidates(args, args.target_method_ids, round_index, context, dashboard, dashboard_state)
+        dashboard_state["metrics"] = {
+            "candidate_count": len(candidates),
+            "unique_payload_count": len({(int(candidate["method_id"]), candidate["payload_hex"]) for candidate in candidates}),
+            "detail_trial_count": 0,
+        }
+        dashboard_state["trials_done"] = 0
+        dashboard_state["trials_total"] = len(candidates) * args.trial_count if args.execute else 0
         paths = round_paths(args.output_prefix, round_index, stamp)
         write_candidate_csv(paths["candidates"], candidates)
         for candidate in candidates:
@@ -1015,7 +1189,7 @@ def main():
             payload_rows = []
             write_empty_replay_outputs(paths)
         else:
-            detail_rows = run_replay(candidates, args.trial_count, args.timeout, dashboard, dashboard_state)
+            detail_rows = run_replay(candidates, args.trial_count, args.timeout, dashboard, dashboard_state, deadline)
             payload_rows = payload_summary(detail_rows)
             write_csv(paths["detail"], DETAIL_HEADER, detail_rows)
             write_csv(paths["payload_summary"], PAYLOAD_SUMMARY_HEADER, payload_rows)
@@ -1043,6 +1217,7 @@ def main():
             paths["detail"],
             paths["payload_summary"],
         ))
+        round_index += 1
 
     final_path = "{}_final_high_value_{}.csv".format(args.output_prefix, stamp)
     report_path = "{}_report_{}.md".format(args.output_prefix, stamp)
@@ -1062,7 +1237,7 @@ def main():
             dashboard_state["status"] = "final verification"
             dashboard_state["current"] = "{} high-value candidates".format(len(final_candidates))
             dashboard.render(dashboard_state, force=True)
-            detail_rows = run_replay(final_candidates, args.final_trial_count, args.timeout, dashboard, dashboard_state)
+            detail_rows = run_replay(final_candidates, args.final_trial_count, args.timeout, dashboard, dashboard_state, deadline)
             payload_rows = payload_summary(detail_rows)
             final_rows = annotate_final_rows(all_candidates_by_key, payload_rows)
 

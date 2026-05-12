@@ -1,0 +1,8 @@
+method_id,payload_source,payload_label,payload_hex,trials,normal_response_count,error_response_count,timeout_count,state_changed_count,non_trivial_state_effect_count,non_trivial_state_effect_rate,classification
+10,llm_feedback,m10_status_off_byte,00,3,0,3,0,0,0,0.000000,rejected_or_error
+10,llm_feedback,m10_status_off_zero,00000000,3,3,0,0,0,0,0.000000,protocol_valid_no_effect
+10,llm_feedback,m10_status_on_byte,01,3,0,3,0,0,0,0.000000,rejected_or_error
+10,llm_feedback,m10_status_on_u32,00000001,3,0,3,0,0,0,0.000000,rejected_or_error
+10,llm_feedback,m10_status_true_bool_pad,01000000,3,0,3,0,0,0,0.000000,rejected_or_error
+10,llm_feedback,m10_suffix_ff_01000000,01000000ff,3,0,3,0,0,0,0.000000,rejected_or_error
+10,llm_feedback,m10_suffix_zero_01000000,0100000000,3,0,3,0,0,0,0.000000,rejected_or_error

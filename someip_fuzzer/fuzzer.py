@@ -371,7 +371,7 @@ class Fuzzer(threading.Thread):
         return datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
     def _stop_due_to_budget(self):
-        if self.max_cases > 0 and self.case_count >= self.max_cases:
+        if self.duration_sec <= 0 and self.max_cases > 0 and self.case_count >= self.max_cases:
             return True
 
         if self.duration_sec > 0 and (time.time() - self.start_time) >= self.duration_sec:

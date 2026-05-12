@@ -1,9 +1,0 @@
-# ninja log v5
-1	606	1776137796885348074	CMakeFiles/org.genivi.vehicle.playground.SomeIPCommon.dir/generated/org.genivi.vehicle.playground/someip/common/org/genivi/vehicle/playgroundtypes/PlaygroundTypesSomeIPDeployment.cpp.o	4a637d695a6160d2
-606	760	1776137797037353946	CMakeFiles/org.genivi.vehicle.playground.SomeIPCommon.dir/generated/org.genivi.vehicle.playground/someip/common/v1/org/genivi/vehicle/playground/PlaygroundSomeIPDeployment.cpp.o	4cd01e91d4e49b29
-760	1604	1776137797869386059	liborg.genivi.vehicle.playground.SomeIPCommon.so	b22e895d15529c67
-1	4785	1776137801053508624	CMakeFiles/org.genivi.vehicle.playground.SomeIPStub.dir/generated/org.genivi.vehicle.playground/someip/stub/v1/org/genivi/vehicle/playground/PlaygroundSomeIPStubAdapter.cpp.o	2c1a1ad0f4fa3ad7
-4785	4827	1776137801105510620	liborg.genivi.vehicle.playground.SomeIPStub.so	64dd190bad6935dc
-1	6144	1776137802401560347	CMakeFiles/org.genivi.vehicle.playground.SomeIPProxy.dir/generated/org.genivi.vehicle.playground/someip/proxy/v1/org/genivi/vehicle/playground/PlaygroundSomeIPProxy.cpp.o	9c68dd6620cd88d0
-6144	6195	1776137802473563106	liborg.genivi.vehicle.playground.SomeIPProxy.so	18ea5e6caabbfd89
-6195	6217	0	CMakeFiles/install.util	8f574a75eb025395

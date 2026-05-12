@@ -1,6 +1,11 @@
 .vscode
 .venv
 .env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
 **/__pycache__/
 **/*.pyc
 .DS_Store

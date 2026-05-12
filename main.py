@@ -147,7 +147,7 @@ def run_campaign(config_path="config.ini", overrides=None):
             fuzzer_threads = [t for t in threads if isinstance(t, Fuzzer)]
             fuzzer_alive = [t for t in fuzzer_threads if t.is_alive()]
 
-            if len(fuzzer_threads) > 0 and len(fuzzer_alive) == 0:
+            if deadline is None and len(fuzzer_threads) > 0 and len(fuzzer_alive) == 0:
                 log_info("All fuzzer threads finished")
                 break
 

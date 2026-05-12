@@ -1,0 +1,2 @@
+payload_source,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,unique_payload_count,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,protocol_valid_no_effect_count,avg_latency_ms,max_latency_ms,p95_latency_ms,classification_counts
+llm_feedback,150,450,186,264,0,134,150,150,50,12,32.201,63.608,34.968,protocol_valid_no_effect=12;rejected_or_error=88;reproducible_non_trivial_state_effect=50

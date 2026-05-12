@@ -1,6 +1,6 @@
-# SOME/IP 상태 인식 피드백 퍼저
+# SOME/IP LLM Fuzzer
 
-이 저장소는 `test-someip-service`의 SOME/IP PlaygroundService를 대상으로, 단순 crash/hang 탐지가 아니라 **외부에서 관찰 가능한 서버 상태 변화**를 찾기 위한 상태 인식 피드백 퍼징 워크플로우를 정리한 프로젝트입니다.
+이 저장소는 `test-someip-service`의 SOME/IP PlaygroundService를 대상으로, 단순 crash/hang 탐지가 아니라 **외부에서 관찰 가능한 서버 상태 변화**를 찾기 위한 LLM-assisted 상태 인식 퍼징 워크플로우를 정리한 프로젝트입니다.
 
 핵심 목표는 특정 setter/control method에 payload를 입력한 뒤, paired getter를 통해 서버 상태가 실제로 바뀌었는지 확인하는 것입니다. 따라서 현재 실험에서 가장 중요한 성공 지표는 단순 `normal_response_count`가 아니라, **재현 가능한 non-trivial state effect**입니다.
 
@@ -14,7 +14,7 @@
   SOME/IP 서비스 제공자인 `PlaygroundService`를 실행합니다.
 
 - **Client VM**  
-  Python 기반 feedback fuzzer를 실행하고, Server VM으로 SOME/IP payload를 전송합니다.
+  Python 기반 SOME/IP LLM Fuzzer를 실행하고, Server VM으로 SOME/IP payload를 전송합니다.
 
 ```text
 [Local OS / Host PC]
@@ -26,14 +26,14 @@
       │    someip-llm-fuzzer/    │        │    test-someip-service/       │
       │  - IP: 192.168.40.135         │ <----> │  - IP: 192.168.40.134         │
       │  - UDP port: 58423            │        │  - UDP port: 31000            │
-      │  - Python feedback fuzzer     │        │  - PlaygroundService          │
+      │  - SOME/IP LLM Fuzzer         │        │  - PlaygroundService          │
       └───────────────────────────────┘        └───────────────────────────────┘
 ```
 
 | VM | Directory | 역할 |
 |---|---|---|
 | Server VM | `~/test-someip-service/` | SOME/IP 타깃 서비스인 `PlaygroundService`를 build하고 실행합니다. |
-| Client VM | `~/someip-llm-fuzzer/` | Python feedback fuzzer를 실행하고 SOME/IP payload를 전송합니다. |
+| Client VM | `~/someip-llm-fuzzer/` | SOME/IP LLM Fuzzer를 실행하고 SOME/IP payload를 전송합니다. |
 
 현재 네트워크 설정은 다음을 기준으로 합니다.
 
@@ -257,7 +257,7 @@ sudo ss -uapn | grep 31000
 cd ~/someip-llm-fuzzer
 ```
 
-Client VM은 Python feedback fuzzer를 실행하고, Server VM의 `PlaygroundService`로 SOME/IP payload를 전송합니다.
+Client VM은 SOME/IP LLM Fuzzer를 실행하고, Server VM의 `PlaygroundService`로 SOME/IP payload를 전송합니다.
 
 ### 7.1 Python 환경 생성
 
@@ -317,7 +317,9 @@ STATE_FUZZ_EXECUTE=0
 
 - Dry-run에서는 `STATE_FUZZ_EXECUTE=0`을 유지합니다.
 - Server VM이 실행 중이고 네트워크 통신이 확인된 뒤에만 `STATE_FUZZ_EXECUTE=1` 또는 `--execute`를 사용합니다.
-- API key는 코드에 hardcode하지 않습니다.
+- API key는 코드, README, 결과 파일, 커밋 메시지에 hardcode하지 않습니다.
+- 실제 `.env`는 git에 올리지 않습니다. 이 저장소의 `.gitignore`는 `.env`, `.env.*`, 하위 디렉터리의 `.env` 파일을 제외하고 `.env.example`만 허용합니다.
+- 외부 공개용 문서에는 실제 OpenAI API key, 개인 IP, host-only 네트워크 구성, 계정명, 절대 경로 등 환경 식별 정보를 그대로 넣지 않습니다.
 
 ---
 
@@ -435,6 +437,19 @@ cd ~/someip-llm-fuzzer
   --execute
 ```
 
+30분처럼 wall-clock 기준으로 계속 실행하려면 `--duration-sec`를 사용합니다.
+이 옵션이 있으면 round가 빨리 끝나도 시간이 끝날 때까지 다음 round를 계속 실행합니다.
+
+```bash
+../miniconda3/envs/someipfuzz/bin/python scripts/state_feedback_fuzzer.py \
+  --target-methods 10,12,14 \
+  --candidates-per-round 50 \
+  --trial-count 3 \
+  --final-trial-count 10 \
+  --duration-sec 30m \
+  --execute
+```
+
 OpenAI-guided planning을 사용할 경우 다음과 같이 실행합니다.
 
 ```bash
@@ -458,7 +473,7 @@ OPENAI_API_KEY=... \
 
 | Script | 역할 |
 |---|---|
-| `scripts/state_feedback_fuzzer.py` | 메인 feedback-guided state-aware fuzzer입니다. Round별 candidate 생성, optional OpenAI 호출, optional replay, feedback 분석, 최종 report 생성을 수행합니다. 현재 기본 프로파일은 Method 14입니다. |
+| `scripts/state_feedback_fuzzer.py` | 메인 SOME/IP LLM Fuzzer입니다. Round별 candidate 생성, optional OpenAI 호출, optional replay, feedback 분석, 최종 report 생성을 수행합니다. 현재 기본 프로파일은 Method 14입니다. |
 | `scripts/compare_state_fuzzers.py` | state-effect 프로파일에 대한 공통 replay/summary 로직과 LLM vs Radamsa 비교를 수행합니다. |
 | `scripts/check_candidate_state_effect.py` | Replay path에서 사용하는 low-level SOME/IP call helper입니다. Packet build/send/receive helper와 session ID handling을 제공합니다. |
 | `scripts/someip_transport.py` | Playground service용 최소 SOME/IP packet 생성 및 response parsing helper입니다. |
@@ -473,7 +488,7 @@ OPENAI_API_KEY=... \
 
 ## 13. Feedback Fuzzer 출력 파일
 
-Timestamp 기준으로 feedback fuzzer는 아래 파일을 생성합니다.
+Timestamp 기준으로 SOME/IP LLM Fuzzer는 아래 파일을 생성합니다.
 
 ```text
 results/state_feedback_round_<round>_candidates_<timestamp>.csv
@@ -660,7 +675,7 @@ results/*_report_*.md
 - Crash가 없어도 재현 가능한 Getter 8 state effect를 찾았다면 캠페인은 성공으로 볼 수 있습니다.
 - Real replay를 실행하려면 Server VM의 SOME/IP service가 실행 중이어야 합니다.
 - IP, port, interface가 바뀌면 `config.ini`와 `scripts/someip_transport.py`를 먼저 수정해야 합니다.
-- OpenAI API key는 코드에 hardcode하지 말고 환경변수 또는 `.env`로 관리합니다.
+- OpenAI API key는 코드에 hardcode하지 말고 환경변수 또는 git에 포함되지 않는 `.env`로 관리합니다.
+- 공개 저장소로 push하기 전에는 `git status --short`와 `git diff --cached`에서 `.env`, 실제 API key, 개인 IP/계정/절대 경로가 포함되지 않았는지 확인합니다.
 
 ---
-

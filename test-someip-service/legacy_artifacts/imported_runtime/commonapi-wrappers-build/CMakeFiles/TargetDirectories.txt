@@ -1,9 +1,0 @@
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/install/local.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/install.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/list_install_components.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/rebuild_cache.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/edit_cache.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/org.genivi.vehicle.playground.SomeIPStub.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/org.genivi.vehicle.playground.SomeIPProxy.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/install/strip.dir
-/home/server/test-someip-service/commonapi-wrappers/build/CMakeFiles/org.genivi.vehicle.playground.SomeIPCommon.dir
