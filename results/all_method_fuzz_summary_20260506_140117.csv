@@ -1,0 +1,2 @@
+method_id,method_name,role,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,unique_payload_count,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,avg_latency_ms,max_latency_ms,p95_latency_ms,classification_counts
+14,changeDoorsState,method,16,48,42,6,0,16,30,30,10,36.672,376.651,32.608,protocol_valid_no_state_effect=4;rejected_or_error=2;reproducible_non_trivial_state_effect=10

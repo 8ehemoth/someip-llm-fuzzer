@@ -1,0 +1,151 @@
+payload_source,payload_label,method_id,method_name,getter_id,payload_hex,payload_len,round_index,generation_strategy,seed_payload_hex,feedback_note
+llm_feedback,m10_status_off_zero,10,setSeatHeatingStatus,9,00000000,4,2,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_on_u32,10,setSeatHeatingStatus,9,00000001,4,2,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_on_byte,10,setSeatHeatingStatus,9,01,1,2,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_off_byte,10,setSeatHeatingStatus,9,00,1,2,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_true_bool_pad,10,setSeatHeatingStatus,9,01000000,4,2,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_suffix_zero_01000000,10,setSeatHeatingStatus,9,0100000000,5,2,suffix_padding,01000000,
+llm_feedback,m10_suffix_ff_01000000,10,setSeatHeatingStatus,9,01000000ff,5,2,suffix_padding,01000000,
+llm_feedback,m10_prefix_zero_01000000,10,setSeatHeatingStatus,9,0001000000,5,2,prefix_padding,01000000,
+llm_feedback,m10_prefix_ff_01000000,10,setSeatHeatingStatus,9,ff01000000,5,2,prefix_padding,01000000,
+llm_feedback,m10_double_01000000,10,setSeatHeatingStatus,9,0100000001000000,8,2,length_variation_duplication,01000000,
+llm_feedback,m10_trunc2_01000000,10,setSeatHeatingStatus,9,0100,2,2,length_variation_truncation,01000000,
+llm_feedback,m10_trunc3_01000000,10,setSeatHeatingStatus,9,010000,3,2,length_variation_truncation,01000000,
+llm_feedback,m10_byte0_2_01000000,10,setSeatHeatingStatus,9,02000000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte0_3_01000000,10,setSeatHeatingStatus,9,03000000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte0_255_01000000,10,setSeatHeatingStatus,9,ff000000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte1_1_01000000,10,setSeatHeatingStatus,9,01010000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte1_2_01000000,10,setSeatHeatingStatus,9,01020000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte1_3_01000000,10,setSeatHeatingStatus,9,01030000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte1_255_01000000,10,setSeatHeatingStatus,9,01ff0000,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte2_1_01000000,10,setSeatHeatingStatus,9,01000100,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte2_2_01000000,10,setSeatHeatingStatus,9,01000200,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte2_3_01000000,10,setSeatHeatingStatus,9,01000300,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte2_255_01000000,10,setSeatHeatingStatus,9,0100ff00,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte3_1_01000000,10,setSeatHeatingStatus,9,01000001,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte3_2_01000000,10,setSeatHeatingStatus,9,01000002,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte3_3_01000000,10,setSeatHeatingStatus,9,01000003,4,2,byte_mutation,01000000,
+llm_feedback,m10_byte3_255_01000000,10,setSeatHeatingStatus,9,010000ff,4,2,byte_mutation,01000000,
+llm_feedback,m10_suffix_zero_00000000,10,setSeatHeatingStatus,9,0000000000,5,2,suffix_padding,00000000,
+llm_feedback,m10_suffix_ff_00000000,10,setSeatHeatingStatus,9,00000000ff,5,2,suffix_padding,00000000,
+llm_feedback,m10_prefix_ff_00000000,10,setSeatHeatingStatus,9,ff00000000,5,2,prefix_padding,00000000,
+llm_feedback,m10_double_00000000,10,setSeatHeatingStatus,9,0000000000000000,8,2,length_variation_duplication,00000000,
+llm_feedback,m10_trunc2_00000000,10,setSeatHeatingStatus,9,0000,2,2,length_variation_truncation,00000000,
+llm_feedback,m10_trunc3_00000000,10,setSeatHeatingStatus,9,000000,3,2,length_variation_truncation,00000000,
+llm_feedback,m10_byte1_1_00000000,10,setSeatHeatingStatus,9,00010000,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte1_2_00000000,10,setSeatHeatingStatus,9,00020000,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte1_3_00000000,10,setSeatHeatingStatus,9,00030000,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte1_255_00000000,10,setSeatHeatingStatus,9,00ff0000,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte2_1_00000000,10,setSeatHeatingStatus,9,00000100,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte2_2_00000000,10,setSeatHeatingStatus,9,00000200,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte2_3_00000000,10,setSeatHeatingStatus,9,00000300,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte2_255_00000000,10,setSeatHeatingStatus,9,0000ff00,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte3_2_00000000,10,setSeatHeatingStatus,9,00000002,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte3_3_00000000,10,setSeatHeatingStatus,9,00000003,4,2,byte_mutation,00000000,
+llm_feedback,m10_byte3_255_00000000,10,setSeatHeatingStatus,9,000000ff,4,2,byte_mutation,00000000,
+llm_feedback,m10_guided_random_00,10,setSeatHeatingStatus,9,03ac0186,4,2,guided_random,,deterministic fallback exploration
+llm_feedback,m10_guided_random_01,10,setSeatHeatingStatus,9,00390102ff03,6,2,guided_random,,deterministic fallback exploration
+llm_feedback,m10_guided_random_02,10,setSeatHeatingStatus,9,010001ff01013dff01000001,12,2,guided_random,,deterministic fallback exploration
+llm_feedback,m10_guided_random_03,10,setSeatHeatingStatus,9,010200ff320164000301ff,11,2,guided_random,,deterministic fallback exploration
+llm_feedback,m10_guided_random_04,10,setSeatHeatingStatus,9,0003020101ff03021619ff01,12,2,guided_random,,deterministic fallback exploration
+llm_feedback,m10_guided_random_05,10,setSeatHeatingStatus,9,ff8e63,3,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_level_0_u32,12,setSeatHeatingLevel,11,00000000,4,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_1_u32,12,setSeatHeatingLevel,11,00000001,4,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_2_u32,12,setSeatHeatingLevel,11,00000002,4,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_3_u32,12,setSeatHeatingLevel,11,00000003,4,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_1_byte,12,setSeatHeatingLevel,11,01,1,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_2_byte,12,setSeatHeatingLevel,11,02,1,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_3_byte,12,setSeatHeatingLevel,11,03,1,2,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_suffix_zero_00000001,12,setSeatHeatingLevel,11,0000000100,5,2,suffix_padding,00000001,
+llm_feedback,m12_suffix_ff_00000001,12,setSeatHeatingLevel,11,00000001ff,5,2,suffix_padding,00000001,
+llm_feedback,m12_prefix_zero_00000001,12,setSeatHeatingLevel,11,0000000001,5,2,prefix_padding,00000001,
+llm_feedback,m12_prefix_ff_00000001,12,setSeatHeatingLevel,11,ff00000001,5,2,prefix_padding,00000001,
+llm_feedback,m12_double_00000001,12,setSeatHeatingLevel,11,0000000100000001,8,2,length_variation_duplication,00000001,
+llm_feedback,m12_trunc1_00000001,12,setSeatHeatingLevel,11,00,1,2,length_variation_truncation,00000001,
+llm_feedback,m12_trunc2_00000001,12,setSeatHeatingLevel,11,0000,2,2,length_variation_truncation,00000001,
+llm_feedback,m12_trunc3_00000001,12,setSeatHeatingLevel,11,000000,3,2,length_variation_truncation,00000001,
+llm_feedback,m12_byte0_1_00000001,12,setSeatHeatingLevel,11,01000001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte0_2_00000001,12,setSeatHeatingLevel,11,02000001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte0_3_00000001,12,setSeatHeatingLevel,11,03000001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte0_255_00000001,12,setSeatHeatingLevel,11,ff000001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte1_1_00000001,12,setSeatHeatingLevel,11,00010001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte1_2_00000001,12,setSeatHeatingLevel,11,00020001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte1_3_00000001,12,setSeatHeatingLevel,11,00030001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte1_255_00000001,12,setSeatHeatingLevel,11,00ff0001,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte2_1_00000001,12,setSeatHeatingLevel,11,00000101,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte2_2_00000001,12,setSeatHeatingLevel,11,00000201,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte2_3_00000001,12,setSeatHeatingLevel,11,00000301,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte2_255_00000001,12,setSeatHeatingLevel,11,0000ff01,4,2,byte_mutation,00000001,
+llm_feedback,m12_byte3_255_00000001,12,setSeatHeatingLevel,11,000000ff,4,2,byte_mutation,00000001,
+llm_feedback,m12_suffix_zero_00000000,12,setSeatHeatingLevel,11,0000000000,5,2,suffix_padding,00000000,
+llm_feedback,m12_suffix_ff_00000000,12,setSeatHeatingLevel,11,00000000ff,5,2,suffix_padding,00000000,
+llm_feedback,m12_prefix_ff_00000000,12,setSeatHeatingLevel,11,ff00000000,5,2,prefix_padding,00000000,
+llm_feedback,m12_double_00000000,12,setSeatHeatingLevel,11,0000000000000000,8,2,length_variation_duplication,00000000,
+llm_feedback,m12_byte0_1_00000000,12,setSeatHeatingLevel,11,01000000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte0_2_00000000,12,setSeatHeatingLevel,11,02000000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte0_3_00000000,12,setSeatHeatingLevel,11,03000000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte0_255_00000000,12,setSeatHeatingLevel,11,ff000000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte1_1_00000000,12,setSeatHeatingLevel,11,00010000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte1_2_00000000,12,setSeatHeatingLevel,11,00020000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte1_3_00000000,12,setSeatHeatingLevel,11,00030000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte1_255_00000000,12,setSeatHeatingLevel,11,00ff0000,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte2_1_00000000,12,setSeatHeatingLevel,11,00000100,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte2_2_00000000,12,setSeatHeatingLevel,11,00000200,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte2_3_00000000,12,setSeatHeatingLevel,11,00000300,4,2,byte_mutation,00000000,
+llm_feedback,m12_byte2_255_00000000,12,setSeatHeatingLevel,11,0000ff00,4,2,byte_mutation,00000000,
+llm_feedback,m12_guided_random_00,12,setSeatHeatingLevel,11,4fff2c00ecff0101ff0303ff03,13,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_guided_random_01,12,setSeatHeatingLevel,11,01ffff03ff0301ff0203,10,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_guided_random_02,12,setSeatHeatingLevel,11,02032c02b1ffff00b702fe01030c0002,16,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_guided_random_03,12,setSeatHeatingLevel,11,00ff0200dc03ff03ff00,10,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_guided_random_06,12,setSeatHeatingLevel,11,ff014fff8402ff42ff020100010303,15,2,guided_random,,deterministic fallback exploration
+llm_feedback,m12_guided_random_07,12,setSeatHeatingLevel,11,ff,1,2,guided_random,,deterministic fallback exploration
+llm_feedback,m14_baseline_open_all,14,changeDoorsState,8,01010101,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_reset_close_all,14,changeDoorsState,8,02020202,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_reset_expected_noop,14,changeDoorsState,8,00000000,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_front_left,14,changeDoorsState,8,01000000,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_front_right,14,changeDoorsState,8,00010000,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_rear_left,14,changeDoorsState,8,00000100,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_rear_right,14,changeDoorsState,8,00000001,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_front_pair,14,changeDoorsState,8,01010000,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_rear_pair,14,changeDoorsState,8,00000101,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_mixed_open_close_1,14,changeDoorsState,8,01020102,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_mixed_open_close_2,14,changeDoorsState,8,02010102,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_invalid3_all,14,changeDoorsState,8,03030303,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_boundaryff_all,14,changeDoorsState,8,ffffffff,4,2,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_suffix_zero_01010101,14,changeDoorsState,8,0101010100,5,2,suffix_padding,01010101,
+llm_feedback,m14_suffix_ff_01010101,14,changeDoorsState,8,01010101ff,5,2,suffix_padding,01010101,
+llm_feedback,m14_prefix_zero_01010101,14,changeDoorsState,8,0001010101,5,2,prefix_padding,01010101,
+llm_feedback,m14_prefix_ff_01010101,14,changeDoorsState,8,ff01010101,5,2,prefix_padding,01010101,
+llm_feedback,m14_double_01010101,14,changeDoorsState,8,0101010101010101,8,2,length_variation_duplication,01010101,
+llm_feedback,m14_trunc1_01010101,14,changeDoorsState,8,01,1,2,length_variation_truncation,01010101,
+llm_feedback,m14_trunc2_01010101,14,changeDoorsState,8,0101,2,2,length_variation_truncation,01010101,
+llm_feedback,m14_trunc3_01010101,14,changeDoorsState,8,010101,3,2,length_variation_truncation,01010101,
+llm_feedback,m14_byte0_0_01010101,14,changeDoorsState,8,00010101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte0_2_01010101,14,changeDoorsState,8,02010101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte0_3_01010101,14,changeDoorsState,8,03010101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte0_255_01010101,14,changeDoorsState,8,ff010101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte1_0_01010101,14,changeDoorsState,8,01000101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte1_2_01010101,14,changeDoorsState,8,01020101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte1_3_01010101,14,changeDoorsState,8,01030101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte1_255_01010101,14,changeDoorsState,8,01ff0101,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte2_0_01010101,14,changeDoorsState,8,01010001,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte2_2_01010101,14,changeDoorsState,8,01010201,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte2_3_01010101,14,changeDoorsState,8,01010301,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte2_255_01010101,14,changeDoorsState,8,0101ff01,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte3_0_01010101,14,changeDoorsState,8,01010100,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte3_2_01010101,14,changeDoorsState,8,01010102,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte3_3_01010101,14,changeDoorsState,8,01010103,4,2,byte_mutation,01010101,
+llm_feedback,m14_byte3_255_01010101,14,changeDoorsState,8,010101ff,4,2,byte_mutation,01010101,
+llm_feedback,m14_suffix_zero_02020202,14,changeDoorsState,8,0202020200,5,2,suffix_padding,02020202,
+llm_feedback,m14_suffix_ff_02020202,14,changeDoorsState,8,02020202ff,5,2,suffix_padding,02020202,
+llm_feedback,m14_prefix_zero_02020202,14,changeDoorsState,8,0002020202,5,2,prefix_padding,02020202,
+llm_feedback,m14_prefix_ff_02020202,14,changeDoorsState,8,ff02020202,5,2,prefix_padding,02020202,
+llm_feedback,m14_double_02020202,14,changeDoorsState,8,0202020202020202,8,2,length_variation_duplication,02020202,
+llm_feedback,m14_trunc1_02020202,14,changeDoorsState,8,02,1,2,length_variation_truncation,02020202,
+llm_feedback,m14_trunc2_02020202,14,changeDoorsState,8,0202,2,2,length_variation_truncation,02020202,
+llm_feedback,m14_trunc3_02020202,14,changeDoorsState,8,020202,3,2,length_variation_truncation,02020202,
+llm_feedback,m14_byte0_0_02020202,14,changeDoorsState,8,00020202,4,2,byte_mutation,02020202,
+llm_feedback,m14_byte0_1_02020202,14,changeDoorsState,8,01020202,4,2,byte_mutation,02020202,
+llm_feedback,m14_byte0_3_02020202,14,changeDoorsState,8,03020202,4,2,byte_mutation,02020202,
+llm_feedback,m14_byte0_255_02020202,14,changeDoorsState,8,ff020202,4,2,byte_mutation,02020202,
+llm_feedback,m14_byte1_0_02020202,14,changeDoorsState,8,02000202,4,2,byte_mutation,02020202,

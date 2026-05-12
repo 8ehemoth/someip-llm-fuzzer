@@ -1,0 +1,4 @@
+payload_source,setter_method_id,total_candidates,total_trials,setter_normal_count,state_changed_count,target_state_reached_count,target_state_reached_rate,classification_counts
+llm,10,16,160,160,0,10,0.062500,no_state_effect=15;reproducible_target_state=1
+llm,12,11,110,110,0,10,0.090909,no_state_effect=10;reproducible_target_state=1
+radamsa,10,2,20,20,0,0,0.000000,no_state_effect=2

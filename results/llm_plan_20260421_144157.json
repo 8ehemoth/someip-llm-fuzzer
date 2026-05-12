@@ -1,0 +1,70 @@
+{
+  "planner_version": "2.0",
+  "source_file": "results/results_radamsa_20260421_142923.csv",
+  "next_action": "structured_payload_focus",
+  "reason": "Heuristic shortcut: reuse and expand a previously successful payload neighborhood discovered in prior runs.",
+  "target_methods": [
+    10
+  ],
+  "payload_strategy": "success_neighborhood_expansion",
+  "payload_cases": [
+    {
+      "label": "success_exact",
+      "hex": "000000000000000000000000000000000000000000000001"
+    },
+    {
+      "label": "pad_left_2",
+      "hex": "0000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "label": "pad_right_2",
+      "hex": "0000000000000000000000000000000000000000000000010000"
+    },
+    {
+      "label": "pad_left_4",
+      "hex": "00000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "label": "pad_right_4",
+      "hex": "00000000000000000000000000000000000000000000000100000000"
+    },
+    {
+      "label": "tail_2",
+      "hex": "0001"
+    },
+    {
+      "label": "tail_4",
+      "hex": "00000001"
+    },
+    {
+      "label": "head_2",
+      "hex": "0000"
+    },
+    {
+      "label": "head_4",
+      "hex": "00000000"
+    },
+    {
+      "label": "pad_to_32",
+      "hex": "0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "label": "tail2_pad16",
+      "hex": "00000000000000000000000000000001"
+    }
+  ],
+  "run_config": {
+    "mode": "fuzz",
+    "max_cases": 11,
+    "fuzz_interval_sec": 1.0,
+    "response_timeout_sec": 0.3,
+    "heartbeat_interval_sec": 3.0,
+    "heartbeat_fail_threshold": 3,
+    "log_csv_base": "results/results_llm_plan.csv"
+  },
+  "notes": [
+    "Generated locally without LLM API call.",
+    "Focused around previous success payload.",
+    "Black-box only: no server logs or source assumptions."
+  ]
+}

@@ -1,0 +1,3 @@
+setter_method_id,getter_method_id,payload_hex,trials,normal_response_count,state_changed_count,state_changed_rate,reproducible_state_changed,classification,before_payload_distribution,after_payload_distribution,avg_latency_ms
+10,9,000000000000000000000000000000000000000000000001,30,30,0,0.000000,False,protocol_valid_no_state_change,00000000=30,00000000=30,20.397
+12,11,00000000b40000640000000000000000,30,30,0,0.000000,False,protocol_valid_no_state_change,00000000=30,00000000=30,20.149

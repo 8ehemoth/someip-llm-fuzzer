@@ -1,0 +1,4 @@
+source_file,payload_source,payload_label,method_id,payload_hex,expected_after_payload_hex
+manual,baseline,open_all,14,01010101,01010101
+manual,baseline,close_all_reset_equivalent,14,02020202,00000000
+manual,baseline,nothing,14,00000000,00000000

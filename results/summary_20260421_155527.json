@@ -1,0 +1,288 @@
+{
+  "file": "results/results_radamsa_20260421_155514.csv",
+  "generated_at": "2026-04-21T15:55:27",
+  "total_cases": 10,
+  "mode_count": {
+    "fuzz": 10
+  },
+  "verdict_count": {
+    "error_response": 10
+  },
+  "retcode_count": {
+    "0x09": 10
+  },
+  "msg_type_count": {
+    "0x81": 10
+  },
+  "payload_source_count": {
+    "radamsa": 10
+  },
+  "response_received_count": {
+    "True": 10
+  },
+  "latency_ms": {
+    "avg": 44.88,
+    "min": 38.41,
+    "max": 59.08
+  },
+  "methods": {
+    "10": {
+      "count": 10,
+      "avg_latency_ms": 44.88,
+      "min_latency_ms": 38.41,
+      "max_latency_ms": 59.08,
+      "retcode_count": {
+        "0x09": 10
+      },
+      "verdict_count": {
+        "error_response": 10
+      },
+      "msg_type_count": {
+        "0x81": 10
+      },
+      "payload_source_count": {
+        "radamsa": 10
+      },
+      "payloads": {
+        "empty_seed": {
+          "payload_len": 0,
+          "payload_hex": "",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 39.87,
+          "payload_source": "radamsa"
+        },
+        "seed_00": {
+          "payload_len": 1,
+          "payload_hex": "ff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 52.57,
+          "payload_source": "radamsa"
+        },
+        "seed_0000": {
+          "payload_len": 7,
+          "payload_hex": "f3a081bec08000",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 46.61,
+          "payload_source": "radamsa"
+        },
+        "seed_0001": {
+          "payload_len": 0,
+          "payload_hex": "",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 59.08,
+          "payload_source": "radamsa"
+        },
+        "seed_00010001": {
+          "payload_len": 5,
+          "payload_hex": "0001c08001",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 44.64,
+          "payload_source": "radamsa"
+        }
+      }
+    }
+  },
+  "payloads": {
+    "empty_seed": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 40.2,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_00": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 45.49,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_0000": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 46.91,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_0001": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 49.38,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_00010001": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 42.39,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    }
+  },
+  "success_cases": [],
+  "error_cases": [
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "empty_seed",
+      "payload_hex": "",
+      "payload_len": 0,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 40.54
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00",
+      "payload_hex": "0101010101850101cd",
+      "payload_len": 9,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 38.41
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0000",
+      "payload_hex": "00f3a080b000",
+      "payload_len": 6,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 47.21
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0001",
+      "payload_hex": "006cf3a080b801",
+      "payload_len": 7,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 39.69
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00010001",
+      "payload_hex": "0001ff01",
+      "payload_len": 4,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 40.14
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "empty_seed",
+      "payload_hex": "",
+      "payload_len": 0,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 39.87
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00",
+      "payload_hex": "ff",
+      "payload_len": 1,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 52.57
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0000",
+      "payload_hex": "f3a081bec08000",
+      "payload_len": 7,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 46.61
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0001",
+      "payload_hex": "",
+      "payload_len": 0,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 59.08
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00010001",
+      "payload_hex": "0001c08001",
+      "payload_len": 5,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 44.64
+    }
+  ],
+  "observations": [
+    "Observed methods: ['10']"
+  ]
+}

@@ -1,0 +1,1 @@
+method_id,payload_source,payload_label,payload_hex,trials,normal_response_count,error_response_count,timeout_count,state_changed_count,non_trivial_state_effect_count,non_trivial_state_effect_rate,classification

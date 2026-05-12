@@ -1,0 +1,11 @@
+timestamp,thread_index,test_id,mode,target_field,target_value,payload_source,payload_label,req_payload_len,req_payload_hex,req_service_id,req_method_id,req_session_id,response_received,response_time_ms,rsp_method_id,rsp_session_id,rsp_client_id,rsp_msg_type,rsp_retcode,verdict,req_method_id_dec,rsp_method_id_dec
+15:55:53.609,0,1,fuzz,method_id,12,llm,u16_0001,2,0001,0xff40,0x000c,0x0010,True,71.97,0x000c,0x0010,0x1343,0x81,0x09,error_response,12,12
+15:55:54.665,0,2,fuzz,method_id,12,llm,u16_000a,2,000a,0xff40,0x000c,0x0011,True,50.37,0x000c,0x0011,0x1343,0x81,0x09,error_response,12,12
+15:55:55.713,0,3,fuzz,method_id,12,llm,u16_0100,2,0100,0xff40,0x000c,0x0012,True,45.42,0x000c,0x0012,0x1343,0x81,0x09,error_response,12,12
+15:55:56.761,0,4,fuzz,method_id,12,llm,u32_00000001,4,00000001,0xff40,0x000c,0x0013,True,44.80,0x000c,0x0013,0x1343,0x81,0x09,error_response,12,12
+15:55:57.825,0,5,fuzz,method_id,12,llm,u32_0000000a,4,0000000a,0xff40,0x000c,0x0014,True,60.88,0x000c,0x0014,0x1343,0x81,0x09,error_response,12,12
+15:55:58.885,0,6,fuzz,method_id,12,llm,u32_00000100,4,00000100,0xff40,0x000c,0x0015,True,54.79,0x000c,0x0015,0x1343,0x81,0x09,error_response,12,12
+15:55:59.937,0,7,fuzz,method_id,12,llm,pair_0001_0001,4,00010001,0xff40,0x000c,0x0016,True,49.06,0x000c,0x0016,0x1343,0x81,0x09,error_response,12,12
+15:56:00.993,0,8,fuzz,method_id,12,llm,pair_0001_ffff,4,0001ffff,0xff40,0x000c,0x0017,True,50.97,0x000c,0x0017,0x1343,0x81,0x09,error_response,12,12
+15:56:02.041,0,9,fuzz,method_id,12,llm,pair_0100_0100,4,01000100,0xff40,0x000c,0x0018,True,44.98,0x000c,0x0018,0x1343,0x81,0x09,error_response,12,12
+15:56:03.101,0,10,fuzz,method_id,12,llm,pad16_tail_0001,16,00000000000000000000000000000001,0xff40,0x000c,0x0019,True,54.66,0x000c,0x0019,0x1343,0x80,0x00,normal_response,12,12

@@ -1,0 +1,50 @@
+{
+  "planner_version": "1.0",
+  "source_file": "results/results_llm_plan_20260421_141013.csv",
+  "next_action": "structured_payload_focus",
+  "reason": "Heuristic shortcut: stable repeated error_response with fixed retcode on methods 10/12, so try structured short payloads without spending tokens.",
+  "target_methods": [
+    10,
+    12
+  ],
+  "payload_strategy": "structured_u16_pairs",
+  "payload_cases": [
+    {
+      "label": "u16_0001",
+      "hex": "0001"
+    },
+    {
+      "label": "u16_000a",
+      "hex": "000a"
+    },
+    {
+      "label": "u16_0100",
+      "hex": "0100"
+    },
+    {
+      "label": "pair_0001_0001",
+      "hex": "00010001"
+    },
+    {
+      "label": "pair_0001_ffff",
+      "hex": "0001ffff"
+    },
+    {
+      "label": "pair_0100_0100",
+      "hex": "01000100"
+    }
+  ],
+  "run_config": {
+    "mode": "fuzz",
+    "max_cases": 12,
+    "fuzz_interval_sec": 1.0,
+    "response_timeout_sec": 0.3,
+    "heartbeat_interval_sec": 3.0,
+    "heartbeat_fail_threshold": 3,
+    "log_csv_base": "results/results_llm_plan.csv"
+  },
+  "notes": [
+    "Generated locally without LLM API call.",
+    "Black-box only: no server logs or source assumptions."
+  ]
+}

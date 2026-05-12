@@ -1,0 +1,91 @@
+{
+  "llm_file": "results/results_llm_plan_20260421_155736.csv",
+  "radamsa_file": "results/results_radamsa_20260421_155749.csv",
+  "llm_summary": {
+    "total_cases": 10,
+    "verdict_count": {
+      "error_response": 9,
+      "normal_response": 1
+    },
+    "retcode_count": {
+      "0x09": 9,
+      "0x00": 1
+    },
+    "msg_type_count": {
+      "0x81": 9,
+      "0x80": 1
+    },
+    "method_count": {
+      "12": 10
+    },
+    "payload_source_count": {
+      "llm": 10
+    },
+    "unique_retcode_count": 2,
+    "unique_msg_type_count": 2,
+    "unique_method_retcode_verdict_count": 2,
+    "avg_latency_ms": 52.45,
+    "min_latency_ms": 40.17,
+    "max_latency_ms": 78.97,
+    "methods": {
+      "12": {
+        "count": 10,
+        "retcodes": {
+          "0x09": 9,
+          "0x00": 1
+        },
+        "verdicts": {
+          "error_response": 9,
+          "normal_response": 1
+        },
+        "payload_sources": {
+          "llm": 10
+        },
+        "avg_latency_ms": 52.45,
+        "min_latency_ms": 40.17,
+        "max_latency_ms": 78.97
+      }
+    }
+  },
+  "radamsa_summary": {
+    "total_cases": 10,
+    "verdict_count": {
+      "error_response": 10
+    },
+    "retcode_count": {
+      "0x09": 10
+    },
+    "msg_type_count": {
+      "0x81": 10
+    },
+    "method_count": {
+      "12": 10
+    },
+    "payload_source_count": {
+      "radamsa": 10
+    },
+    "unique_retcode_count": 1,
+    "unique_msg_type_count": 1,
+    "unique_method_retcode_verdict_count": 1,
+    "avg_latency_ms": 48.18,
+    "min_latency_ms": 40.02,
+    "max_latency_ms": 62.67,
+    "methods": {
+      "12": {
+        "count": 10,
+        "retcodes": {
+          "0x09": 10
+        },
+        "verdicts": {
+          "error_response": 10
+        },
+        "payload_sources": {
+          "radamsa": 10
+        },
+        "avg_latency_ms": 48.18,
+        "min_latency_ms": 40.02,
+        "max_latency_ms": 62.67
+      }
+    }
+  }
+}

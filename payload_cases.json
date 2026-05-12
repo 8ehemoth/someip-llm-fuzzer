@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-04-21T13:21:58",
+  "source_plan_reason": "Heuristic shortcut: stable repeated error_response with fixed retcode on methods 10/12, so try structured short payloads without spending tokens.",
+  "payload_strategy": "structured_u16_pairs",
+  "payload_cases": [
+    {
+      "label": "u16_0001",
+      "hex": "0001",
+      "length": 2
+    },
+    {
+      "label": "u16_000a",
+      "hex": "000a",
+      "length": 2
+    },
+    {
+      "label": "u16_0100",
+      "hex": "0100",
+      "length": 2
+    },
+    {
+      "label": "pair_0001_0001",
+      "hex": "00010001",
+      "length": 4
+    },
+    {
+      "label": "pair_0001_ffff",
+      "hex": "0001ffff",
+      "length": 4
+    },
+    {
+      "label": "pair_0100_0100",
+      "hex": "01000100",
+      "length": 4
+    }
+  ]
+}

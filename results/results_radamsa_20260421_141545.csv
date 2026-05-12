@@ -1,0 +1,13 @@
+timestamp,thread_index,test_id,mode,target_field,target_value,payload_source,payload_label,req_payload_len,req_payload_hex,req_service_id,req_method_id,req_session_id,response_received,response_time_ms,rsp_method_id,rsp_session_id,rsp_client_id,rsp_msg_type,rsp_retcode,verdict
+14:15:46.997,0,1,fuzz,method_id,10,radamsa,seed_0001,32,1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a,0xff40,0x000a,0x0010,True,88.44,0x000a,0x0010,0x1343,0x81,0x09,error_response
+14:15:48.057,0,2,fuzz,method_id,10,radamsa,seed_000a,5,e281a8000a,0xff40,0x000a,0x0011,True,44.51,0x000a,0x0011,0x1343,0x81,0x09,error_response
+14:15:49.113,0,3,fuzz,method_id,10,radamsa,seed_0100,2,7100,0xff40,0x000a,0x0012,True,47.55,0x000a,0x0012,0x1343,0x81,0x09,error_response
+14:15:50.173,0,4,fuzz,method_id,10,radamsa,seed_00010001,8,00c081e2808d0001,0xff40,0x000a,0x0013,True,40.80,0x000a,0x0013,0x1343,0x81,0x09,error_response
+14:15:51.229,0,5,fuzz,method_id,10,radamsa,seed_0001ffff,7,efb7ba00010000,0xff40,0x000a,0x0014,True,43.92,0x000a,0x0014,0x1343,0x81,0x09,error_response
+14:15:52.317,0,6,fuzz,method_id,10,radamsa,seed_01000100,4,00010100,0xff40,0x000a,0x0015,True,50.58,0x000a,0x0015,0x1343,0x81,0x09,error_response
+14:15:53.397,0,7,fuzz,method_id,12,radamsa,seed_0001,3,090001,0xff40,0x000c,0x0016,True,54.52,0x000c,0x0016,0x1343,0x81,0x09,error_response
+14:15:54.449,0,8,fuzz,method_id,12,radamsa,seed_000a,6,f3a080a1000a,0xff40,0x000c,0x0017,True,38.24,0x000c,0x0017,0x1343,0x81,0x09,error_response
+14:15:55.505,0,9,fuzz,method_id,12,radamsa,seed_0100,3,010100,0xff40,0x000c,0x0018,True,47.94,0x000c,0x0018,0x1343,0x81,0x09,error_response
+14:15:56.557,0,10,fuzz,method_id,12,radamsa,seed_00010001,7,e2808400010001,0xff40,0x000c,0x0019,True,40.09,0x000c,0x0019,0x1343,0x81,0x09,error_response
+14:15:57.605,0,11,fuzz,method_id,12,radamsa,seed_0001ffff,4,0000ffff,0xff40,0x000c,0x001a,True,39.32,0x000c,0x001a,0x1343,0x81,0x09,error_response
+14:15:58.669,0,12,fuzz,method_id,12,radamsa,seed_01000100,8,010001f3a080b300,0xff40,0x000c,0x001b,True,50.42,0x000c,0x001b,0x1343,0x81,0x09,error_response

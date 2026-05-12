@@ -1,0 +1,4 @@
+payload_source,payload_label,method_id,payload_hex,payload_len,method_name,paired_getter,batch_index,generation_strategy,seed_payload_hex,note
+llm_api,reset_close_all,14,02020202,4,changeDoorsState,8,1,semantic_reset,,Method 14 dry-run candidate
+llm_api,reset_expected_getter8,14,00000000,4,changeDoorsState,8,1,semantic_reset_observation,,Method 14 dry-run candidate
+llm_api,baseline_open_all,14,01010101,4,changeDoorsState,8,2,semantic_baseline,,Method 14 dry-run candidate

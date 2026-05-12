@@ -1,0 +1,12 @@
+timestamp,thread_index,test_id,mode,target_field,target_value,payload_source,payload_label,req_payload_len,req_payload_hex,req_service_id,req_method_id,req_session_id,response_received,response_time_ms,rsp_method_id,rsp_session_id,rsp_client_id,rsp_msg_type,rsp_retcode,verdict,req_method_id_dec,rsp_method_id_dec
+14:55:24.761,0,1,fuzz,method_id,12,llm,success_exact,16,00000000b40000640000000000000000,0xff40,0x000c,0x0010,True,87.40,0x000c,0x0010,0x1343,0x80,0x00,normal_response,12,12
+14:55:25.825,0,2,fuzz,method_id,12,llm,pad_left_2,18,000000000000b40000640000000000000000,0xff40,0x000c,0x0011,True,53.28,0x000c,0x0011,0x1343,0x80,0x00,normal_response,12,12
+14:55:26.869,0,3,fuzz,method_id,12,llm,pad_right_2,18,00000000b400006400000000000000000000,0xff40,0x000c,0x0012,True,40.53,0x000c,0x0012,0x1343,0x80,0x00,normal_response,12,12
+14:55:27.941,0,4,fuzz,method_id,12,llm,pad_left_4,20,0000000000000000b40000640000000000000000,0xff40,0x000c,0x0013,True,65.58,0x000c,0x0013,0x1343,0x80,0x00,normal_response,12,12
+14:55:28.993,0,5,fuzz,method_id,12,llm,pad_right_4,20,00000000b4000064000000000000000000000000,0xff40,0x000c,0x0014,True,46.72,0x000c,0x0014,0x1343,0x80,0x00,normal_response,12,12
+14:55:30.037,0,6,fuzz,method_id,12,llm,tail_2,2,0000,0xff40,0x000c,0x0015,True,41.46,0x000c,0x0015,0x1343,0x81,0x09,error_response,12,12
+14:55:31.105,0,7,fuzz,method_id,12,llm,tail_4,4,00000000,0xff40,0x000c,0x0016,True,65.59,0x000c,0x0016,0x1343,0x80,0x00,normal_response,12,12
+14:55:32.153,0,8,fuzz,method_id,12,llm,pad_to_24,24,000000000000000000000000b40000640000000000000000,0xff40,0x000c,0x0017,True,45.34,0x000c,0x0017,0x1343,0x80,0x00,normal_response,12,12
+14:55:33.189,0,9,fuzz,method_id,12,llm,pad_to_32,32,0000000000000000000000000000000000000000b40000640000000000000000,0xff40,0x000c,0x0018,True,33.42,0x000c,0x0018,0x1343,0x80,0x00,normal_response,12,12
+14:55:34.237,0,10,fuzz,method_id,12,llm,tail2_pad16,16,00000000000000000000000000000000,0xff40,0x000c,0x0019,True,45.56,0x000c,0x0019,0x1343,0x80,0x00,normal_response,12,12
+14:55:35.289,0,11,fuzz,method_id,12,llm,tail2_pad24,24,000000000000000000000000000000000000000000000000,0xff40,0x000c,0x001a,True,49.30,0x000c,0x001a,0x1343,0x80,0x00,normal_response,12,12

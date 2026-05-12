@@ -1,0 +1,11 @@
+payload_source,payload_label,method_id,payload_hex,payload_len,method_name,paired_getter,batch_index,generation_strategy,seed_payload_hex,note
+llm_api,reset_close_all,14,02020202,4,changeDoorsState,8,1,semantic_reset,,Method 14 dry-run candidate
+llm_api,reset_expected_getter8,14,00000000,4,changeDoorsState,8,1,semantic_reset_observation,,Method 14 dry-run candidate
+llm_api,baseline_open_all,14,01010101,4,changeDoorsState,8,1,semantic_baseline,,Method 14 dry-run candidate
+llm_api,open_front_left,14,01000000,4,changeDoorsState,8,1,semantic_single_door,,Method 14 dry-run candidate
+llm_api,open_front_right,14,00010000,4,changeDoorsState,8,2,semantic_single_door,,Method 14 dry-run candidate
+radamsa_real,seed_01010101,14,01010101,4,,,,seed,01010101,
+radamsa_real,seed_02020202,14,02020202,4,,,,seed,02020202,
+radamsa_real,seed_00000000,14,00000000,4,,,,seed,00000000,
+radamsa_real,deterministic_random_5,14,472737f5c3,5,,,,deterministic_random_bytes,,radamsa-like random mutation
+radamsa_real,bit_flip_01010101_10,14,01010501,4,,,,bit_flip,01010101,

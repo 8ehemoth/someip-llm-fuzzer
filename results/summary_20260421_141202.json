@@ -1,0 +1,235 @@
+{
+  "file": "results/results_llm_plan_20260421_141013.csv",
+  "generated_at": "2026-04-21T14:12:02",
+  "total_cases": 12,
+  "mode_count": {
+    "fuzz": 12
+  },
+  "verdict_count": {
+    "error_response": 12
+  },
+  "retcode_count": {
+    "0x09": 12
+  },
+  "msg_type_count": {
+    "0x81": 12
+  },
+  "response_received_count": {
+    "True": 12
+  },
+  "latency_ms": {
+    "avg": 58.63,
+    "min": 39.24,
+    "max": 103.97
+  },
+  "methods": {
+    "10": {
+      "count": 6,
+      "avg_latency_ms": 67.7,
+      "min_latency_ms": 44.96,
+      "max_latency_ms": 103.97,
+      "retcode_count": {
+        "0x09": 6
+      },
+      "verdict_count": {
+        "error_response": 6
+      },
+      "msg_type_count": {
+        "0x81": 6
+      },
+      "payloads": {
+        "u16_0001": {
+          "payload_len": 2,
+          "payload_hex": "0001",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 86.96
+        },
+        "u16_000a": {
+          "payload_len": 2,
+          "payload_hex": "000a",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 46.4
+        },
+        "u16_0100": {
+          "payload_len": 2,
+          "payload_hex": "0100",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 64.82
+        },
+        "pair_0001_0001": {
+          "payload_len": 4,
+          "payload_hex": "00010001",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 103.97
+        },
+        "pair_0001_ffff": {
+          "payload_len": 4,
+          "payload_hex": "0001ffff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 59.07
+        },
+        "pair_0100_0100": {
+          "payload_len": 4,
+          "payload_hex": "01000100",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 44.96
+        }
+      }
+    },
+    "12": {
+      "count": 6,
+      "avg_latency_ms": 49.57,
+      "min_latency_ms": 39.24,
+      "max_latency_ms": 69.33,
+      "retcode_count": {
+        "0x09": 6
+      },
+      "verdict_count": {
+        "error_response": 6
+      },
+      "msg_type_count": {
+        "0x81": 6
+      },
+      "payloads": {
+        "u16_0001": {
+          "payload_len": 2,
+          "payload_hex": "0001",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 54.91
+        },
+        "u16_000a": {
+          "payload_len": 2,
+          "payload_hex": "000a",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 42.67
+        },
+        "u16_0100": {
+          "payload_len": 2,
+          "payload_hex": "0100",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 39.24
+        },
+        "pair_0001_0001": {
+          "payload_len": 4,
+          "payload_hex": "00010001",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 69.33
+        },
+        "pair_0001_ffff": {
+          "payload_len": 4,
+          "payload_hex": "0001ffff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 49.6
+        },
+        "pair_0100_0100": {
+          "payload_len": 4,
+          "payload_hex": "01000100",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 41.65
+        }
+      }
+    }
+  },
+  "payloads": {
+    "pair_0001_0001": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 86.65,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "pair_0001_ffff": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 54.34,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "pair_0100_0100": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 43.3,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "u16_0001": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 70.94,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "u16_000a": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 44.53,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "u16_0100": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 52.03,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    }
+  },
+  "observations": [
+    "Observed methods: ['10', '12']",
+    "Stable error-only methods: 10:0x09, 12:0x09"
+  ]
+}

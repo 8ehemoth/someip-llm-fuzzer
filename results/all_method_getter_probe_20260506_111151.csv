@@ -1,0 +1,11 @@
+timestamp,probe_name,method_id,hex_method_id,method_name,payload_hex,payload_len,response_received,msg_type,retcode,verdict,latency_ms,response_payload_hex,error
+11:11:53.154,execute_getters,1,0x0001,getConsumptionAttribute,,0,True,0x80,0x00,normal_response,28.715,40900000,
+11:11:53.163,execute_getters,2,0x0002,getCapacityAttribute,,0,True,0x80,0x00,normal_response,9.164,c8,
+11:11:53.170,execute_getters,3,0x0003,getVolumeAttribute,,0,True,0x80,0x00,normal_response,6.072,40494f8a,
+11:11:53.177,execute_getters,4,0x0004,getEngineSpeedAttribute,,0,True,0x80,0x00,normal_response,6.162,07d0,
+11:11:53.183,execute_getters,5,0x0005,getCurrentGearAttribute,,0,True,0x80,0x00,normal_response,6.071,05,
+11:11:53.190,execute_getters,6,0x0006,getIsReverseGearOnAttribute,,0,True,0x80,0x00,normal_response,6.032,00,
+11:11:53.197,execute_getters,7,0x0007,getDrivePowerTransmissionAttribute,,0,True,0x80,0x00,normal_response,6.025,02,
+11:11:53.203,execute_getters,8,0x0008,getDoorsOpeningStatusAttribute,,0,True,0x80,0x00,normal_response,6.093,00000000,
+11:11:53.222,execute_getters,9,0x0009,getSeatHeatingStatusAttribute,,0,True,0x80,0x00,normal_response,18.037,00000000,
+11:11:53.229,execute_getters,11,0x000b,getSeatHeatingLevelAttribute,,0,True,0x80,0x00,normal_response,6.176,00000000,

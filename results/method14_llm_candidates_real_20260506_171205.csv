@@ -1,0 +1,11 @@
+payload_source,payload_label,method_id,payload_hex,payload_len,generation_strategy,seed_payload_hex,note
+llm_real,noop_noop_noop_noop,14,00000000,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,open_open_open_open,14,01010101,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,close_close_close_close,14,02020202,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,noop_invalid3_close_invalid3,14,00030203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,noop_noop_boundaryff_boundaryff,14,0000ffff,4,semantic_boundary_command_included,,four door command bytes
+llm_real,close_noop_close_invalid3,14,02000203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,open_close_close_invalid3,14,01020203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,close_noop_noop_invalid3,14,02000003,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,open_boundaryff_boundaryff_close,14,01ffff02,4,semantic_boundary_command_included,,four door command bytes
+llm_real,open_invalid3_noop_invalid3,14,01030003,4,semantic_invalid_enum_included,,four door command bytes

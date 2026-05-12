@@ -1,0 +1,1081 @@
+#!/usr/bin/env python3
+"""Feedback-guided state-aware SOME/IP fuzzer.
+
+The current default profile targets Method 14, but the workflow and report
+structure are intended for state-effect fuzzing campaigns more broadly.
+"""
+
+import argparse
+import csv
+import glob
+import json
+import os
+import random
+import re
+import shutil
+import sys
+import threading
+import time
+from collections import Counter, defaultdict
+from datetime import datetime
+
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+SCRIPTS_DIR = os.path.dirname(__file__)
+if SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, SCRIPTS_DIR)
+
+from compare_state_fuzzers import (  # noqa: E402
+    DETAIL_HEADER,
+    PAYLOAD_SUMMARY_HEADER,
+    SUMMARY_HEADER,
+    payload_summary,
+    run_trial,
+    source_summary,
+    write_csv,
+)
+
+
+METHOD_PROFILES = {
+    10: {
+        "method_name": "setSeatHeatingStatus",
+        "getter_id": 9,
+        "getter_name": "getSeatHeatingStatusAttribute",
+        "reset_payload_hex": "00000000",
+        "reset_expected_payload_hex": "00000000",
+        "baseline_payload_hex": "01000000",
+        "payload_assumption": "seat heating status setter payload; start with compact boolean/integer encodings",
+        "semantic_payloads": [
+            ("status_off_zero", "00000000"),
+            ("status_on_u32", "00000001"),
+            ("status_on_byte", "01"),
+            ("status_off_byte", "00"),
+            ("status_true_bool_pad", "01000000"),
+            ("status_false_bool_pad", "00000000"),
+        ],
+    },
+    12: {
+        "method_name": "setSeatHeatingLevel",
+        "getter_id": 11,
+        "getter_name": "getSeatHeatingLevelAttribute",
+        "reset_payload_hex": "00000000",
+        "reset_expected_payload_hex": "00000000",
+        "baseline_payload_hex": "00000001",
+        "payload_assumption": "seat heating level setter payload; try small enum/integer values and boundary levels",
+        "semantic_payloads": [
+            ("level_0_u32", "00000000"),
+            ("level_1_u32", "00000001"),
+            ("level_2_u32", "00000002"),
+            ("level_3_u32", "00000003"),
+            ("level_1_byte", "01"),
+            ("level_2_byte", "02"),
+            ("level_3_byte", "03"),
+        ],
+    },
+    14: {
+        "method_name": "changeDoorsState",
+        "getter_id": 8,
+        "getter_name": "getDoorsOpeningStatusAttribute",
+        "reset_payload_hex": "02020202",
+        "reset_expected_payload_hex": "00000000",
+        "baseline_payload_hex": "01010101",
+        "payload_assumption": "4-byte DoorCommand array: 00=no-op, 01=open, 02=close/reset, 03/ff=invalid or boundary",
+        "semantic_payloads": [
+            ("baseline_open_all", "01010101"),
+            ("reset_close_all", "02020202"),
+            ("reset_expected_noop", "00000000"),
+            ("open_front_left", "01000000"),
+            ("open_front_right", "00010000"),
+            ("open_rear_left", "00000100"),
+            ("open_rear_right", "00000001"),
+            ("open_front_pair", "01010000"),
+            ("open_rear_pair", "00000101"),
+            ("mixed_open_close_1", "01020102"),
+            ("mixed_open_close_2", "02010102"),
+            ("invalid3_all", "03030303"),
+            ("boundaryff_all", "ffffffff"),
+        ],
+    },
+}
+DEFAULT_TARGET_METHODS = [10, 12, 14]
+PAYLOAD_SOURCE = "llm_feedback"
+DEFAULT_OUTPUT_PREFIX = "results/state_feedback"
+ENV_PATHS = [os.path.join(REPO_ROOT, ".env"), os.path.join(REPO_ROOT, "someip_fuzzer", ".env")]
+
+CANDIDATE_HEADER = [
+    "payload_source",
+    "payload_label",
+    "method_id",
+    "method_name",
+    "getter_id",
+    "payload_hex",
+    "payload_len",
+    "round_index",
+    "generation_strategy",
+    "seed_payload_hex",
+    "feedback_note",
+]
+FINAL_HEADER = CANDIDATE_HEADER + [
+    "classification",
+    "normal_response_count",
+    "error_response_count",
+    "timeout_count",
+    "non_trivial_state_effect_count",
+    "non_trivial_state_effect_rate",
+]
+
+
+def load_dotenv_simple(paths=ENV_PATHS):
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+
+
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def env_int(name, default):
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def env_float(name, default):
+    try:
+        return float(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def timestamp():
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def ensure_parent(path):
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
+def normalize_candidate_hex(value):
+    text = str(value or "").strip().lower()
+    if text.startswith("0x"):
+        text = text[2:]
+    text = re.sub(r"\s+", "", text)
+    if not text:
+        return ""
+    if len(text) % 2 != 0:
+        return ""
+    if not re.fullmatch(r"[0-9a-f]+", text):
+        return ""
+    byte_len = len(text) // 2
+    if byte_len < 1 or byte_len > 16:
+        return ""
+    return text
+
+
+def payload_len(payload_hex):
+    return len(bytes.fromhex(payload_hex))
+
+
+def profile_for_method(method_id):
+    method_id = int(method_id)
+    if method_id not in METHOD_PROFILES:
+        raise ValueError("unsupported target method: {}".format(method_id))
+    return METHOD_PROFILES[method_id]
+
+
+def make_candidate(method_id, label, payload_hex, round_index, strategy, seed_payload_hex="", feedback_note=""):
+    payload_hex = normalize_candidate_hex(payload_hex)
+    if not payload_hex:
+        return None
+    profile = profile_for_method(method_id)
+    return {
+        "payload_source": PAYLOAD_SOURCE,
+        "payload_label": "m{}_{}".format(method_id, str(label or "candidate").strip()[:88]),
+        "method_id": method_id,
+        "method_name": profile["method_name"],
+        "getter_id": profile["getter_id"],
+        "payload_hex": payload_hex,
+        "payload_len": payload_len(payload_hex),
+        "round_index": round_index,
+        "generation_strategy": str(strategy or "").strip(),
+        "seed_payload_hex": normalize_candidate_hex(seed_payload_hex),
+        "feedback_note": str(feedback_note or "").strip()[:160],
+    }
+
+
+def dedupe_candidates(rows, limit):
+    selected = []
+    seen = set()
+    for row in rows:
+        if row is None:
+            continue
+        key = (int(row["method_id"]), row["payload_hex"])
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(row)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def write_candidate_csv(path, rows):
+    ensure_parent(path)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CANDIDATE_HEADER)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def read_csv_rows(path):
+    with open(path, "r", newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
+
+
+def safe_int(value, default=0):
+    try:
+        return int(str(value).strip() or default)
+    except ValueError:
+        return default
+
+
+def length_bucket(payload_hex):
+    return str(len(payload_hex) // 2)
+
+
+def rows_by_classification(payload_rows):
+    grouped = defaultdict(list)
+    for row in payload_rows:
+        grouped[row.get("classification", "")].append(row)
+    return grouped
+
+
+def round_metrics(payload_rows, detail_rows):
+    classed = rows_by_classification(payload_rows)
+    return {
+        "candidate_count": len(payload_rows),
+        "normal_response_count": sum(safe_int(row.get("normal_response_count", 0)) for row in payload_rows),
+        "error_response_count": sum(safe_int(row.get("error_response_count", 0)) for row in payload_rows),
+        "timeout_count": sum(safe_int(row.get("timeout_count", 0)) for row in payload_rows),
+        "unique_payload_count": len({row.get("payload_hex", "") for row in payload_rows}),
+        "non_trivial_state_effect_count": sum(safe_int(row.get("non_trivial_state_effect_count", 0)) for row in payload_rows),
+        "reproducible_non_trivial_state_effect_count": len(classed.get("reproducible_non_trivial_state_effect", [])),
+        "protocol_valid_no_effect_count": len(classed.get("protocol_valid_no_effect", [])),
+        "detail_trial_count": len(detail_rows),
+    }
+
+
+def summarize_length_outcomes(payload_rows):
+    buckets = defaultdict(Counter)
+    for row in payload_rows:
+        bucket = length_bucket(row.get("payload_hex", ""))
+        classification = row.get("classification", "unknown")
+        buckets[bucket][classification] += 1
+    return {
+        bucket: dict(counter)
+        for bucket, counter in sorted(buckets.items(), key=lambda item: int(item[0] or 0))
+    }
+
+
+def examples(rows, limit=8):
+    return [
+        {
+            "payload_label": row.get("payload_label", ""),
+            "method_id": row.get("method_id", ""),
+            "payload_hex": row.get("payload_hex", ""),
+            "classification": row.get("classification", ""),
+            "normal_response_count": row.get("normal_response_count", ""),
+            "non_trivial_state_effect_count": row.get("non_trivial_state_effect_count", ""),
+        }
+        for row in rows[:limit]
+    ]
+
+
+def feedback_context(history):
+    payload_rows = []
+    for item in history:
+        payload_rows.extend(item.get("payload_rows", []))
+    classed = rows_by_classification(payload_rows)
+    high_value = classed.get("reproducible_non_trivial_state_effect", []) + classed.get("unstable_non_trivial_state_effect", [])
+    no_effect = classed.get("protocol_valid_no_effect", [])
+    errors = classed.get("rejected_or_error", []) + classed.get("timeout_or_no_response", [])
+    return {
+        "high_value_payloads": examples(high_value, 10),
+        "protocol_valid_no_effect_payloads": examples(no_effect, 10),
+        "error_response_payloads": examples(errors, 10),
+        "payload_length_summary": summarize_length_outcomes(payload_rows),
+        "mutation_direction": mutation_direction(high_value, no_effect, errors),
+    }
+
+
+def mutation_direction(high_value, no_effect, errors):
+    if high_value:
+        return [
+            "Mutate around high-value payloads by changing one byte at a time.",
+            "Try prefix/suffix padding around successful compact payloads while staying within 1..16 bytes.",
+            "Preserve bytes that appear to drive the paired getter away from reset state.",
+        ]
+    if no_effect:
+        return [
+            "Avoid pure reset/no-op equivalents such as 02020202 and 00000000.",
+            "Bias toward compact semantic setter values before trying random long payloads.",
+            "Try 03/ff boundaries in one position only, not all positions at once.",
+        ]
+    if errors:
+        return [
+            "Move back toward 4-byte payloads with values limited to 00/01/02.",
+            "Use length variations sparingly after protocol-valid candidates appear.",
+        ]
+    return [
+        "Start from semantic payloads for each target method.",
+        "Cover valid setter values, boundary values, prefix/suffix padding, and length variations.",
+    ]
+
+
+def deterministic_seed_pool(method_id, round_index, context):
+    profile = profile_for_method(method_id)
+    rows = []
+
+    def add(label, payload_hex, strategy, seed="", note=""):
+        rows.append(make_candidate(method_id, label, payload_hex, round_index, strategy, seed, note))
+
+    high_values = [
+        item["payload_hex"]
+        for item in context.get("high_value_payloads", [])
+        if item.get("payload_hex") and int(item.get("method_id") or method_id) == method_id
+    ]
+    base_payloads = high_values or [
+        profile["baseline_payload_hex"],
+        profile["reset_payload_hex"],
+        profile["reset_expected_payload_hex"],
+    ]
+
+    for label, payload_hex in profile["semantic_payloads"]:
+        add(label, payload_hex, "semantic_seed", "", "initial Method {} structure coverage".format(method_id))
+
+    for seed in base_payloads:
+        add("suffix_zero_{}".format(seed), seed + "00", "suffix_padding", seed)
+        add("suffix_ff_{}".format(seed), seed + "ff", "suffix_padding", seed)
+        add("prefix_zero_{}".format(seed), "00" + seed, "prefix_padding", seed)
+        add("prefix_ff_{}".format(seed), "ff" + seed, "prefix_padding", seed)
+        add("double_{}".format(seed), seed + seed, "length_variation_duplication", seed)
+        add("trunc1_{}".format(seed), seed[:2], "length_variation_truncation", seed)
+        add("trunc2_{}".format(seed), seed[:4], "length_variation_truncation", seed)
+        add("trunc3_{}".format(seed), seed[:6], "length_variation_truncation", seed)
+
+        data = bytearray(bytes.fromhex(seed))
+        for index in range(min(len(data), 4)):
+            for value in (0x00, 0x01, 0x02, 0x03, 0xFF):
+                mutated = bytearray(data)
+                mutated[index] = value
+                add("byte{}_{}_{}".format(index, value, seed), mutated.hex(), "byte_mutation", seed)
+
+    rng = random.Random((method_id << 16) + round_index)
+    for index in range(64):
+        length = rng.randint(1, 16)
+        payload_hex = bytes(rng.choice([0x00, 0x01, 0x02, 0x03, 0xFF, rng.getrandbits(8)]) for _ in range(length)).hex()
+        add("guided_random_{:02d}".format(index), payload_hex, "guided_random", "", "deterministic fallback exploration")
+
+    return rows
+
+
+def extract_json_object(text):
+    text = str(text or "").strip()
+    text = re.sub(r"^```json\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"^```\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    try:
+        return json.loads(text)
+    except ValueError:
+        pass
+
+    for start in [index for index, ch in enumerate(text) if ch == "{"]:
+        depth = 0
+        in_string = False
+        escaped = False
+        for index in range(start, len(text)):
+            ch = text[index]
+            if escaped:
+                escaped = False
+                continue
+            if ch == "\\" and in_string:
+                escaped = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = text[start:index + 1]
+                    try:
+                        return json.loads(candidate)
+                    except ValueError:
+                        break
+    raise ValueError("could not parse JSON object from model output")
+
+
+def save_invalid_model_output(method_id, round_index, text):
+    path = os.path.join(
+        "results",
+        "state_feedback_invalid_model_output_m{}_round_{}_{}.txt".format(method_id, round_index, timestamp()),
+    )
+    ensure_parent(path)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(str(text or ""))
+    return path
+
+
+def build_prompt(method_id, round_index, count, context):
+    profile = profile_for_method(method_id)
+    schema = {
+        "candidates": [
+            {
+                "payload_label": "string",
+                "payload_hex": "even-length lowercase hex, 1..16 bytes",
+                "generation_strategy": "semantic|boundary|invalid|padding|prefix|suffix|length_variation|feedback_mutation",
+                "seed_payload_hex": "optional",
+                "feedback_note": "short reason",
+            }
+        ]
+    }
+    return (
+        "Generate feedback-guided SOME/IP payload candidates. Return JSON only.\n"
+        "Target:\n"
+        "- Method ID: {method_id}\n"
+        "- Method name: {method_name}\n"
+        "- Paired getter: Method {getter_id} {getter_name}\n"
+        "- Payload assumption: {payload_assumption}\n"
+        "- Reset payload is {reset_payload}\n"
+        "- Getter after reset is expected to be {reset_expected}\n"
+        "- Goal: produce state-changing payloads that are not reset/no-op equivalents.\n"
+        "Candidate rules:\n"
+        "- Return at least {count} candidates.\n"
+        "- payload_hex must be hex only, even length, non-empty, and 1 to 16 bytes.\n"
+        "- Remove duplicate ideas before returning.\n"
+        "- Include semantic, boundary, invalid, padding, prefix, suffix, and length variation when useful.\n"
+        "Previous round feedback:\n"
+        "{context}\n"
+        "Expected schema:\n"
+        "{schema}\n"
+        "Round index: {round_index}\n"
+    ).format(
+        count=count,
+        context=json.dumps(context, ensure_ascii=False, indent=2),
+        schema=json.dumps(schema, ensure_ascii=False, indent=2),
+        round_index=round_index,
+        method_id=method_id,
+        method_name=profile["method_name"],
+        getter_id=profile["getter_id"],
+        getter_name=profile["getter_name"],
+        payload_assumption=profile["payload_assumption"],
+        reset_payload=profile["reset_payload_hex"],
+        reset_expected=profile["reset_expected_payload_hex"],
+    )
+
+
+def openai_dashboard_waiter(dashboard, dashboard_state, stop_event, method_id, round_index):
+    started = time.time()
+    while not stop_event.wait(1.0):
+        if dashboard is None or dashboard_state is None:
+            continue
+        dashboard_state["status"] = "planning"
+        dashboard_state["current"] = "OpenAI m{} round {} waiting {}s".format(
+            method_id,
+            round_index,
+            int(time.time() - started),
+        )
+        dashboard.render(dashboard_state, force=True)
+
+
+def call_openai_candidates(args, method_id, round_index, context, dashboard=None, dashboard_state=None):
+    if OpenAI is None:
+        raise RuntimeError("openai package is not installed")
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set")
+    model = args.model or os.environ.get("OPENAI_MODEL", "").strip()
+    if not model:
+        raise RuntimeError("--model or OPENAI_MODEL is required with --use-openai-api")
+    client = OpenAI(api_key=api_key)
+    prompt = build_prompt(method_id, round_index, args.candidates_per_round, context)
+    stop_event = threading.Event()
+    waiter = None
+    if dashboard is not None and dashboard_state is not None:
+        dashboard_state["status"] = "planning"
+        dashboard_state["current"] = "OpenAI m{} round {} waiting 0s".format(method_id, round_index)
+        dashboard.render(dashboard_state, force=True)
+        waiter = threading.Thread(
+            target=openai_dashboard_waiter,
+            args=(dashboard, dashboard_state, stop_event, method_id, round_index),
+        )
+        waiter.daemon = True
+        waiter.start()
+    try:
+        if hasattr(client, "responses"):
+            response = client.responses.create(
+                model=model,
+                instructions="You are a state-aware SOME/IP fuzzing planner. Return only JSON.",
+                input=prompt,
+                max_output_tokens=2400,
+            )
+            text = getattr(response, "output_text", None)
+        else:
+            request = {
+                "model": model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a state-aware SOME/IP fuzzing planner. Return only valid JSON.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.2,
+                "max_tokens": 2400,
+                "response_format": {"type": "json_object"},
+            }
+            try:
+                response = client.chat.completions.create(**request)
+            except TypeError:
+                request.pop("response_format", None)
+                response = client.chat.completions.create(**request)
+            text = response.choices[0].message.content if response.choices else ""
+    finally:
+        stop_event.set()
+        if waiter is not None:
+            waiter.join(timeout=1.0)
+    if not text:
+        raise RuntimeError("model returned empty text")
+    try:
+        obj = extract_json_object(text)
+    except ValueError as exc:
+        path = save_invalid_model_output(method_id, round_index, text)
+        print(
+            "warning: model output was not valid JSON for method {} round {}; saved raw output to {}; using deterministic fallback for this method".format(
+                method_id,
+                round_index,
+                path,
+            ),
+            file=sys.stderr,
+        )
+        return []
+    rows = []
+    for index, item in enumerate(obj.get("candidates", []), start=1):
+        if not isinstance(item, dict):
+            continue
+        rows.append(
+            make_candidate(
+                method_id,
+                item.get("payload_label") or "llm_candidate_{}".format(index),
+                item.get("payload_hex", ""),
+                round_index,
+                item.get("generation_strategy", "llm_feedback_api"),
+                item.get("seed_payload_hex", ""),
+                item.get("feedback_note", ""),
+            )
+        )
+    return rows
+
+
+def generate_candidates(args, method_ids, round_index, context, dashboard=None, dashboard_state=None):
+    rows = []
+    for method_id in method_ids:
+        method_rows = []
+        if args.use_openai_api:
+            method_rows.extend(call_openai_candidates(args, method_id, round_index, context, dashboard, dashboard_state))
+        method_rows.extend(deterministic_seed_pool(method_id, round_index, context))
+        rows.extend(dedupe_candidates(method_rows, args.candidates_per_round))
+    return rows
+
+
+def round_paths(output_prefix, round_index, stamp):
+    return {
+        "candidates": "{}_round_{}_candidates_{}.csv".format(output_prefix, round_index, stamp),
+        "detail": "{}_round_{}_detail_{}.csv".format(output_prefix, round_index, stamp),
+        "payload_summary": "{}_round_{}_payload_summary_{}.csv".format(output_prefix, round_index, stamp),
+        "summary": "{}_round_{}_summary_{}.csv".format(output_prefix, round_index, stamp),
+    }
+
+
+def run_replay(candidates, trial_count, timeout_sec, dashboard=None, dashboard_state=None):
+    from check_candidate_state_effect import call_someip, next_session_id  # noqa: WPS433
+
+    rows = []
+    session_id = 0x7B00
+    total_trials = len(candidates) * trial_count
+    done = 0
+    for item in candidates:
+        replay_item = {
+            "payload_source": item["payload_source"],
+            "payload_label": item["payload_label"],
+            "method_id": item["method_id"],
+            "payload_hex": item["payload_hex"],
+            "payload_len": item["payload_len"],
+        }
+        for trial_index in range(1, trial_count + 1):
+            if dashboard is not None and dashboard_state is not None:
+                dashboard_state["status"] = "executing"
+                dashboard_state["trials_done"] = done
+                dashboard_state["trials_total"] = total_trials
+                dashboard_state["current"] = "m{} {} trial {}/{}".format(
+                    item["method_id"],
+                    item["payload_hex"],
+                    trial_index,
+                    trial_count,
+                )
+                dashboard.render(dashboard_state)
+            row, session_id = run_trial(call_someip, next_session_id, replay_item, trial_index, session_id, timeout_sec)
+            rows.append(row)
+            done += 1
+    if dashboard is not None and dashboard_state is not None:
+        dashboard_state["trials_done"] = done
+        dashboard_state["trials_total"] = total_trials
+        dashboard.render(dashboard_state, force=True)
+    return rows
+
+
+def write_empty_replay_outputs(paths):
+    write_csv(paths["detail"], DETAIL_HEADER, [])
+    write_csv(paths["payload_summary"], PAYLOAD_SUMMARY_HEADER, [])
+    write_csv(paths["summary"], SUMMARY_HEADER, [])
+
+
+def annotate_final_rows(candidate_by_key, payload_rows):
+    rows = []
+    for row in payload_rows:
+        if row.get("classification") != "reproducible_non_trivial_state_effect":
+            continue
+        key = (int(row.get("method_id", 0)), row.get("payload_hex", ""))
+        candidate = dict(candidate_by_key.get(key, {}))
+        if not candidate:
+            continue
+        for column in [
+            "classification",
+            "normal_response_count",
+            "error_response_count",
+            "timeout_count",
+            "non_trivial_state_effect_count",
+            "non_trivial_state_effect_rate",
+        ]:
+            candidate[column] = row.get(column, "")
+        rows.append(candidate)
+    return rows
+
+
+def write_final_high_value(path, rows):
+    ensure_parent(path)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FINAL_HEADER, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+class TerminalDashboard:
+    def __init__(self, enabled, title="SOME/IP State Feedback Fuzzer"):
+        self.enabled = enabled
+        self.title = title
+        self.is_tty = sys.stdout.isatty()
+        self.started_at = time.time()
+        self.last_render = 0.0
+
+    def render(self, state, force=False):
+        if not self.enabled:
+            return
+        now = time.time()
+        if not force and now - self.last_render < 0.25:
+            return
+        self.last_render = now
+        if self.is_tty:
+            self._render_tty(state)
+        elif force:
+            self._render_line(state)
+
+    def _render_tty(self, state):
+        cols = max(80, shutil.get_terminal_size((100, 24)).columns)
+        width = min(cols, 110)
+        line = "+" + "-" * (width - 2) + "+"
+        elapsed = int(time.time() - self.started_at)
+        metrics = state.get("metrics", {})
+        status = state.get("status", "initializing")
+        current = state.get("current", "")
+        print("\033[2J\033[H", end="")
+        print(line)
+        print(self._row(self.title, width))
+        print(line)
+        print(self._row("status: {} | elapsed: {}s | mode: {} | openai: {} | model: {}".format(
+            status,
+            elapsed,
+            state.get("mode", ""),
+            state.get("openai", ""),
+            state.get("model", "") or "n/a",
+        ), width))
+        print(self._row("targets: {} | round: {}/{} | candidates/target/round: {}".format(
+            state.get("targets", ""),
+            state.get("round", 0),
+            state.get("rounds", 0),
+            state.get("candidates_per_round", 0),
+        ), width))
+        print(self._row("trial progress: {}/{} | current: {}".format(
+            state.get("trials_done", 0),
+            state.get("trials_total", 0),
+            current,
+        ), width))
+        print(line)
+        print(self._row("normal: {} | errors: {} | timeouts: {} | non-trivial: {} | reproducible: {}".format(
+            metrics.get("normal_response_count", 0),
+            metrics.get("error_response_count", 0),
+            metrics.get("timeout_count", 0),
+            metrics.get("non_trivial_state_effect_count", 0),
+            metrics.get("reproducible_non_trivial_state_effect_count", 0),
+        ), width))
+        print(self._row("outputs: {}".format(state.get("output", "")), width))
+        print(line)
+        sys.stdout.flush()
+
+    def _render_line(self, state):
+        metrics = state.get("metrics", {})
+        print(
+            "[dashboard] status={status} round={round}/{rounds} trials={done}/{total} "
+            "normal={normal} errors={errors} non_trivial={nontrivial} output={output}".format(
+                status=state.get("status", ""),
+                round=state.get("round", 0),
+                rounds=state.get("rounds", 0),
+                done=state.get("trials_done", 0),
+                total=state.get("trials_total", 0),
+                normal=metrics.get("normal_response_count", 0),
+                errors=metrics.get("error_response_count", 0),
+                nontrivial=metrics.get("non_trivial_state_effect_count", 0),
+                output=state.get("output", ""),
+            )
+        )
+
+    def _row(self, text, width):
+        text = str(text)
+        max_len = width - 4
+        if len(text) > max_len:
+            text = text[: max_len - 3] + "..."
+        return "| " + text.ljust(max_len) + " |"
+
+
+def latest_radamsa_summary_rows():
+    paths = sorted(
+        glob.glob("results/method14_llm_vs_radamsa_summary_*.csv"),
+        key=lambda path: os.path.getmtime(path),
+        reverse=True,
+    )
+    if not paths:
+        return "", []
+    return paths[0], read_csv_rows(paths[0])
+
+
+def radamsa_comparison_table():
+    path, rows = latest_radamsa_summary_rows()
+    if not rows:
+        return "No existing Method 14 Radamsa summary CSV found."
+    lines = ["Existing Radamsa comparison source: `{}`".format(path), "", "| source | unique_payload_count | normal_response_count | error_response_count | non_trivial_state_effect_count | reproducible_non_trivial_state_effect_count |", "|---|---:|---:|---:|---:|---:|"]
+    for row in rows:
+        source = row.get("payload_source", "")
+        if not source.startswith("radamsa"):
+            continue
+        lines.append(
+            "| {source} | {unique} | {normal} | {error} | {nontrivial} | {repro} |".format(
+                source=source,
+                unique=row.get("unique_payload_count", ""),
+                normal=row.get("normal_response_count", ""),
+                error=row.get("error_response_count", ""),
+                nontrivial=row.get("non_trivial_state_effect_count", ""),
+                repro=row.get("reproducible_non_trivial_state_effect_count", ""),
+            )
+        )
+    return "\n".join(lines)
+
+
+def trend_text(round_records):
+    values = [record["metrics"]["non_trivial_state_effect_count"] for record in round_records]
+    repro = [record["metrics"]["reproducible_non_trivial_state_effect_count"] for record in round_records]
+    if not values:
+        return "No executed rounds were available for trend analysis."
+    if values[-1] > values[0] or repro[-1] > repro[0]:
+        return "The feedback loop improved the state-effect signal across rounds."
+    if values[-1] == values[0] and repro[-1] == repro[0]:
+        return "The feedback loop did not improve the state-effect signal across rounds."
+    return "The final round had weaker state-effect counts than the first executed round."
+
+
+def markdown_examples(title, rows):
+    lines = ["### {}".format(title), "", "| method_id | payload_label | payload_hex | classification | normal | non_trivial |", "|---:|---|---|---|---:|---:|"]
+    if not rows:
+        lines.append("|  | none |  |  |  |  |")
+    for row in rows[:10]:
+        lines.append(
+            "| {method_id} | {label} | `{payload}` | {classification} | {normal} | {nontrivial} |".format(
+                method_id=row.get("method_id", ""),
+                label=row.get("payload_label", ""),
+                payload=row.get("payload_hex", ""),
+                classification=row.get("classification", ""),
+                normal=row.get("normal_response_count", ""),
+                nontrivial=row.get("non_trivial_state_effect_count", ""),
+            )
+        )
+    return "\n".join(lines)
+
+
+def write_report(path, args, round_records, final_rows):
+    all_payload_rows = []
+    for record in round_records:
+        all_payload_rows.extend(record.get("payload_rows", []))
+    classed = rows_by_classification(all_payload_rows)
+    high_value = classed.get("reproducible_non_trivial_state_effect", []) + classed.get("unstable_non_trivial_state_effect", [])
+    no_effect = classed.get("protocol_valid_no_effect", [])
+    errors = classed.get("rejected_or_error", []) + classed.get("timeout_or_no_response", [])
+
+    lines = [
+        "# SOME/IP State Feedback Fuzzer Report",
+        "",
+        "Target methods: `{}`.".format(",".join(str(x) for x in args.target_method_ids)),
+        "",
+        "Profiles: Method 10->Getter 9, Method 12->Getter 11, Method 14->Getter 8.",
+        "",
+        "Primary metric: `non_trivial_state_effect_count`. Final high-value metric: `reproducible_non_trivial_state_effect_count`.",
+        "",
+        "Mode: `{}`. OpenAI API requested: `{}`.".format("execute" if args.execute else "dry-run", str(args.use_openai_api)),
+        "",
+        "## Round Summary",
+        "",
+        "| round | target_methods | candidates | normal_response_count | error_response_count | non_trivial_state_effect_count | reproducible_non_trivial_state_effect_count |",
+        "|---:|---|---:|---:|---:|---:|---:|",
+    ]
+    for record in round_records:
+        metrics = record["metrics"]
+        lines.append(
+            "| {round} | {methods} | {candidates} | {normal} | {error} | {nontrivial} | {repro} |".format(
+                round=record["round_index"],
+                methods=",".join(str(x) for x in record.get("target_method_ids", [])),
+                candidates=metrics["candidate_count"],
+                normal=metrics["normal_response_count"],
+                error=metrics["error_response_count"],
+                nontrivial=metrics["non_trivial_state_effect_count"],
+                repro=metrics["reproducible_non_trivial_state_effect_count"],
+            )
+        )
+
+    lines.extend([
+        "",
+        "## Trend",
+        "",
+        trend_text(round_records),
+        "",
+        "## High-Value Final Candidates",
+        "",
+        "Final reproducible high-value candidate count: `{}`.".format(len(final_rows)),
+        "",
+        markdown_examples("High-value payload examples", high_value),
+        "",
+        markdown_examples("Protocol-valid no-effect payload examples", no_effect),
+        "",
+        markdown_examples("Error payload examples", errors),
+        "",
+        "## Radamsa Baseline",
+        "",
+        radamsa_comparison_table(),
+        "",
+        "## Limitation",
+        "",
+        "This is state-aware fuzzing. The goal is to find payloads that produce externally observable paired-getter state effects after reset. It is not a crash/hang campaign, and `normal_response_count` alone is not treated as success.",
+    ])
+
+    ensure_parent(path)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+
+
+def parse_args():
+    load_dotenv_simple()
+    default_use_openai = env_bool("STATE_FUZZ_USE_OPENAI", bool(os.environ.get("OPENAI_API_KEY", "").strip()))
+    default_execute = env_bool("STATE_FUZZ_EXECUTE", False)
+    parser = argparse.ArgumentParser(description="Feedback-guided state-aware SOME/IP fuzzer. Defaults can be set in .env.")
+    parser.add_argument("--target-methods", default=os.environ.get("STATE_FUZZ_TARGET_METHODS", "10,12,14"), help="Comma-separated target methods; supported: 10,12,14")
+    parser.add_argument("--rounds", type=int, default=env_int("STATE_FUZZ_ROUNDS", 3))
+    parser.add_argument("--candidates-per-round", type=int, default=env_int("STATE_FUZZ_CANDIDATES_PER_ROUND", 50))
+    parser.add_argument("--trial-count", type=int, default=env_int("STATE_FUZZ_TRIAL_COUNT", 3))
+    parser.add_argument("--final-trial-count", type=int, default=env_int("STATE_FUZZ_FINAL_TRIAL_COUNT", 10))
+    parser.add_argument("--timeout", type=float, default=env_float("STATE_FUZZ_TIMEOUT", 1.0))
+    openai_group = parser.add_mutually_exclusive_group()
+    openai_group.add_argument("--use-openai-api", dest="use_openai_api", action="store_true")
+    openai_group.add_argument("--no-openai-api", dest="use_openai_api", action="store_false")
+    parser.set_defaults(use_openai_api=default_use_openai)
+    parser.add_argument("--model", default=os.environ.get("OPENAI_MODEL", ""))
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--dry-run", dest="execute", action="store_false")
+    mode_group.add_argument("--execute", dest="execute", action="store_true")
+    parser.set_defaults(execute=default_execute)
+    parser.add_argument("--dashboard", dest="dashboard", action="store_true", default=env_bool("STATE_FUZZ_DASHBOARD", True))
+    parser.add_argument("--no-dashboard", dest="dashboard", action="store_false")
+    parser.add_argument("--output-prefix", default=os.environ.get("STATE_FUZZ_OUTPUT_PREFIX", DEFAULT_OUTPUT_PREFIX))
+    return parser.parse_args()
+
+
+def parse_target_methods(value):
+    method_ids = []
+    for part in str(value or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        method_id = int(part, 0)
+        profile_for_method(method_id)
+        if method_id not in method_ids:
+            method_ids.append(method_id)
+    if not method_ids:
+        method_ids = list(DEFAULT_TARGET_METHODS)
+    return method_ids
+
+
+def validate_args(args):
+    if args.rounds <= 0:
+        raise SystemExit("--rounds must be positive")
+    if args.candidates_per_round <= 0:
+        raise SystemExit("--candidates-per-round must be positive")
+    if args.trial_count <= 0:
+        raise SystemExit("--trial-count must be positive")
+    if args.final_trial_count <= 0:
+        raise SystemExit("--final-trial-count must be positive")
+    args.target_method_ids = parse_target_methods(args.target_methods)
+    if args.use_openai_api and not os.environ.get("OPENAI_API_KEY", "").strip():
+        raise SystemExit("OPENAI_API_KEY is required when OpenAI planning is enabled")
+    if args.use_openai_api and not (args.model or os.environ.get("OPENAI_MODEL", "").strip()):
+        raise SystemExit("--model or OPENAI_MODEL is required when OpenAI planning is enabled")
+
+
+def main():
+    args = parse_args()
+    validate_args(args)
+    stamp = timestamp()
+    round_records = []
+    all_candidates_by_key = {}
+    dashboard = TerminalDashboard(args.dashboard)
+    dashboard_state = {
+        "status": "starting",
+        "mode": "execute" if args.execute else "dry-run",
+        "openai": "on" if args.use_openai_api else "off",
+        "model": args.model or os.environ.get("OPENAI_MODEL", ""),
+        "targets": ",".join(str(x) for x in args.target_method_ids),
+        "round": 0,
+        "rounds": args.rounds,
+        "candidates_per_round": args.candidates_per_round,
+        "trials_done": 0,
+        "trials_total": 0,
+        "current": "",
+        "output": args.output_prefix,
+        "metrics": {},
+    }
+    dashboard.render(dashboard_state, force=True)
+
+    for round_index in range(1, args.rounds + 1):
+        context = feedback_context(round_records)
+        dashboard_state["status"] = "planning"
+        dashboard_state["round"] = round_index
+        dashboard_state["current"] = "generating candidates"
+        dashboard.render(dashboard_state, force=True)
+        candidates = generate_candidates(args, args.target_method_ids, round_index, context, dashboard, dashboard_state)
+        paths = round_paths(args.output_prefix, round_index, stamp)
+        write_candidate_csv(paths["candidates"], candidates)
+        for candidate in candidates:
+            all_candidates_by_key.setdefault((int(candidate["method_id"]), candidate["payload_hex"]), candidate)
+
+        if not args.execute:
+            detail_rows = []
+            payload_rows = []
+            write_empty_replay_outputs(paths)
+        else:
+            detail_rows = run_replay(candidates, args.trial_count, args.timeout, dashboard, dashboard_state)
+            payload_rows = payload_summary(detail_rows)
+            write_csv(paths["detail"], DETAIL_HEADER, detail_rows)
+            write_csv(paths["payload_summary"], PAYLOAD_SUMMARY_HEADER, payload_rows)
+            write_csv(paths["summary"], SUMMARY_HEADER, source_summary(detail_rows, payload_rows))
+
+        metrics = round_metrics(payload_rows, detail_rows)
+        if not args.execute:
+            metrics["candidate_count"] = len(candidates)
+        dashboard_state["metrics"] = metrics
+        dashboard_state["status"] = "round complete"
+        dashboard_state["output"] = paths["payload_summary"]
+        dashboard.render(dashboard_state, force=True)
+        round_records.append({
+            "round_index": round_index,
+            "target_method_ids": list(args.target_method_ids),
+            "paths": paths,
+            "candidates": candidates,
+            "payload_rows": payload_rows,
+            "detail_rows": detail_rows,
+            "metrics": metrics,
+        })
+        print("round={} candidates={} detail={} payload_summary={}".format(
+            round_index,
+            len(candidates),
+            paths["detail"],
+            paths["payload_summary"],
+        ))
+
+    final_path = "{}_final_high_value_{}.csv".format(args.output_prefix, stamp)
+    report_path = "{}_report_{}.md".format(args.output_prefix, stamp)
+    final_rows = []
+
+    if args.execute:
+        prior_payload_rows = []
+        for record in round_records:
+            prior_payload_rows.extend(record["payload_rows"])
+        high_value_payloads = [
+            (int(row.get("method_id", 0)), row["payload_hex"])
+            for row in prior_payload_rows
+            if row.get("classification") in ("reproducible_non_trivial_state_effect", "unstable_non_trivial_state_effect")
+        ]
+        final_candidates = [all_candidates_by_key[key] for key in dict.fromkeys(high_value_payloads) if key in all_candidates_by_key]
+        if final_candidates:
+            dashboard_state["status"] = "final verification"
+            dashboard_state["current"] = "{} high-value candidates".format(len(final_candidates))
+            dashboard.render(dashboard_state, force=True)
+            detail_rows = run_replay(final_candidates, args.final_trial_count, args.timeout, dashboard, dashboard_state)
+            payload_rows = payload_summary(detail_rows)
+            final_rows = annotate_final_rows(all_candidates_by_key, payload_rows)
+
+    write_final_high_value(final_path, final_rows)
+    write_report(report_path, args, round_records, final_rows)
+    print("wrote {}".format(final_path))
+    print("wrote {}".format(report_path))
+    dashboard_state["status"] = "done"
+    dashboard_state["output"] = report_path
+    dashboard.render(dashboard_state, force=True)
+    if not args.execute:
+        print("dry-run only: no replay was executed and no OpenAI API call was made unless --use-openai-api was provided")
+
+
+if __name__ == "__main__":
+    main()

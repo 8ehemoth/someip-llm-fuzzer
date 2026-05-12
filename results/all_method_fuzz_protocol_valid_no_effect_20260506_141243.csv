@@ -1,0 +1,5 @@
+method_id,method_name,role,payload_source,payload_label,payload_hex,payload_len,trials,normal_response_count,state_changed_count,non_trivial_state_effect_count,reset_equivalent_count,after_payload_distribution,classification
+14,changeDoorsState,method,method14_sanity,boundary_ff_all,ffffffff,4,10,10,0,0,10,00000000=10,protocol_valid_no_state_effect
+14,changeDoorsState,method,method14_sanity,close_all_reset_equivalent,02020202,4,10,10,0,0,10,00000000=10,protocol_valid_no_state_effect
+14,changeDoorsState,method,method14_sanity,invalid_enum_3_all,03030303,4,10,10,0,0,10,00000000=10,protocol_valid_no_state_effect
+14,changeDoorsState,method,method14_sanity,nothing,00000000,4,10,10,0,0,10,00000000=10,protocol_valid_no_state_effect

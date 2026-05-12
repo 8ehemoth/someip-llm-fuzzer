@@ -1,0 +1,74 @@
+{
+  "planner_version": "2.0",
+  "source_file": "results/results_radamsa_20260421_151216.csv",
+  "next_action": "structured_payload_focus",
+  "reason": "Heuristic shortcut: methods 10/12 still show stable error-only behavior, so escalate to longer and stronger structured payload families.",
+  "target_methods": [
+    10
+  ],
+  "payload_strategy": "stronger_structured_and_padded",
+  "payload_cases": [
+    {
+      "label": "u16_0001",
+      "hex": "0001"
+    },
+    {
+      "label": "u16_000a",
+      "hex": "000a"
+    },
+    {
+      "label": "u16_0100",
+      "hex": "0100"
+    },
+    {
+      "label": "u32_00000001",
+      "hex": "00000001"
+    },
+    {
+      "label": "u32_0000000a",
+      "hex": "0000000a"
+    },
+    {
+      "label": "u32_00000100",
+      "hex": "00000100"
+    },
+    {
+      "label": "pair_0001_0001",
+      "hex": "00010001"
+    },
+    {
+      "label": "pair_0001_ffff",
+      "hex": "0001ffff"
+    },
+    {
+      "label": "pair_0100_0100",
+      "hex": "01000100"
+    },
+    {
+      "label": "pad16_tail_0001",
+      "hex": "00000000000000000000000000000001"
+    },
+    {
+      "label": "pad24_tail_0001",
+      "hex": "000000000000000000000000000000000000000000000001"
+    },
+    {
+      "label": "flag_u16_u16",
+      "hex": "000100010001"
+    }
+  ],
+  "run_config": {
+    "mode": "fuzz",
+    "max_cases": 12,
+    "fuzz_interval_sec": 1.0,
+    "response_timeout_sec": 0.3,
+    "heartbeat_interval_sec": 3.0,
+    "heartbeat_fail_threshold": 3,
+    "log_csv_base": "results/results_llm_plan.csv"
+  },
+  "notes": [
+    "Generated locally without LLM API call.",
+    "Escalated from short payload family to longer/padded family.",
+    "Black-box only: no server logs or source assumptions."
+  ]
+}

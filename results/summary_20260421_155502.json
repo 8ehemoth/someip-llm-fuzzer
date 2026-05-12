@@ -1,0 +1,288 @@
+{
+  "file": "results/results_radamsa_20260421_154553.csv",
+  "generated_at": "2026-04-21T15:55:02",
+  "total_cases": 10,
+  "mode_count": {
+    "fuzz": 10
+  },
+  "verdict_count": {
+    "error_response": 10
+  },
+  "retcode_count": {
+    "0x09": 10
+  },
+  "msg_type_count": {
+    "0x81": 10
+  },
+  "payload_source_count": {
+    "radamsa": 10
+  },
+  "response_received_count": {
+    "True": 10
+  },
+  "latency_ms": {
+    "avg": 43.56,
+    "min": 37.09,
+    "max": 50.58
+  },
+  "methods": {
+    "10": {
+      "count": 10,
+      "avg_latency_ms": 43.56,
+      "min_latency_ms": 37.09,
+      "max_latency_ms": 50.58,
+      "retcode_count": {
+        "0x09": 10
+      },
+      "verdict_count": {
+        "error_response": 10
+      },
+      "msg_type_count": {
+        "0x81": 10
+      },
+      "payload_source_count": {
+        "radamsa": 10
+      },
+      "payloads": {
+        "empty_seed": {
+          "payload_len": 0,
+          "payload_hex": "",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 43.59,
+          "payload_source": "radamsa"
+        },
+        "seed_00": {
+          "payload_len": 5,
+          "payload_hex": "f3a080acff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 46.64,
+          "payload_source": "radamsa"
+        },
+        "seed_0000": {
+          "payload_len": 1,
+          "payload_hex": "04",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 50.58,
+          "payload_source": "radamsa"
+        },
+        "seed_0001": {
+          "payload_len": 13,
+          "payload_hex": "f3e280a6a0818600f09d9f9601",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 46.63,
+          "payload_source": "radamsa"
+        },
+        "seed_00010001": {
+          "payload_len": 32,
+          "payload_hex": "bfbfbfbfc0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 43.94,
+          "payload_source": "radamsa"
+        }
+      }
+    }
+  },
+  "payloads": {
+    "empty_seed": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 40.34,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_00": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 43.35,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_0000": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 44.72,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_0001": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 44.5,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    },
+    "seed_00010001": {
+      "count": 2,
+      "methods": [
+        "10"
+      ],
+      "avg_latency_ms": 44.88,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      },
+      "payload_source_count": {
+        "radamsa": 2
+      }
+    }
+  },
+  "success_cases": [],
+  "error_cases": [
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "empty_seed",
+      "payload_hex": "",
+      "payload_len": 0,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 37.09
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00",
+      "payload_hex": "0000ffff00",
+      "payload_len": 5,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 40.06
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0000",
+      "payload_hex": "a0b281ca81819f000000",
+      "payload_len": 10,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 38.87
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0001",
+      "payload_hex": "006c02",
+      "payload_len": 3,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 42.36
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00010001",
+      "payload_hex": "000100c081",
+      "payload_len": 5,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 45.81
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "empty_seed",
+      "payload_hex": "",
+      "payload_len": 0,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 43.59
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00",
+      "payload_hex": "f3a080acff",
+      "payload_len": 5,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 46.64
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0000",
+      "payload_hex": "04",
+      "payload_len": 1,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 50.58
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_0001",
+      "payload_hex": "f3e280a6a0818600f09d9f9601",
+      "payload_len": 13,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 46.63
+    },
+    {
+      "method": 10,
+      "payload_source": "radamsa",
+      "payload_label": "seed_00010001",
+      "payload_hex": "bfbfbfbfc0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0",
+      "payload_len": 32,
+      "retcode": "0x09",
+      "msg_type": "0x81",
+      "verdict": "error_response",
+      "latency_ms": 43.94
+    }
+  ],
+  "observations": [
+    "Observed methods: ['10']"
+  ]
+}

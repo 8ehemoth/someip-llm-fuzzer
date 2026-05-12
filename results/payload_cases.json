@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-04-21T15:57:36",
+  "source_plan_reason": "Heuristic shortcut: methods 10/12 still show stable error-only behavior, so escalate to longer and stronger structured payload families.",
+  "payload_strategy": "stronger_structured_and_padded",
+  "payload_cases": [
+    {
+      "label": "u16_0001",
+      "hex": "0001",
+      "length": 2
+    },
+    {
+      "label": "u16_000a",
+      "hex": "000a",
+      "length": 2
+    },
+    {
+      "label": "u16_0100",
+      "hex": "0100",
+      "length": 2
+    },
+    {
+      "label": "u32_00000001",
+      "hex": "00000001",
+      "length": 4
+    },
+    {
+      "label": "u32_0000000a",
+      "hex": "0000000a",
+      "length": 4
+    },
+    {
+      "label": "u32_00000100",
+      "hex": "00000100",
+      "length": 4
+    },
+    {
+      "label": "pair_0001_0001",
+      "hex": "00010001",
+      "length": 4
+    },
+    {
+      "label": "pair_0001_ffff",
+      "hex": "0001ffff",
+      "length": 4
+    },
+    {
+      "label": "pair_0100_0100",
+      "hex": "01000100",
+      "length": 4
+    },
+    {
+      "label": "pad16_tail_0001",
+      "hex": "00000000000000000000000000000001",
+      "length": 16
+    },
+    {
+      "label": "pad24_tail_0001",
+      "hex": "000000000000000000000000000000000000000000000001",
+      "length": 24
+    },
+    {
+      "label": "flag_u16_u16",
+      "hex": "000100010001",
+      "length": 6
+    }
+  ]
+}

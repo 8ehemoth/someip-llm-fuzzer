@@ -1,0 +1,2 @@
+timestamp,probe_name,method_id,hex_method_id,method_name,payload_hex,payload_len,response_received,msg_type,retcode,verdict,latency_ms,response_payload_hex,error
+11:11:58.990,execute_method13,13,0x000d,initTirePressureCalibration,,0,True,0x80,0x00,normal_response,7.116,,

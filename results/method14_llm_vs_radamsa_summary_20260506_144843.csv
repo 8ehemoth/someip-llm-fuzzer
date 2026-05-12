@@ -1,0 +1,3 @@
+payload_source,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,unique_payload_count,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,protocol_valid_no_effect_count,avg_latency_ms,max_latency_ms,p95_latency_ms,classification_counts
+llm_example,12,120,120,0,0,12,100,100,10,2,29.301,41.289,37.254,protocol_valid_no_effect=2;reproducible_non_trivial_state_effect=10
+radamsa_example,11,110,90,20,0,11,30,30,3,6,28.557,53.452,33.856,protocol_valid_no_effect=6;rejected_or_error=2;reproducible_non_trivial_state_effect=3

@@ -1,0 +1,17 @@
+payload_source,payload_label,method_id,payload_hex,payload_len
+manual_sanity,open_all,14,01010101,4
+manual_sanity,close_all_reset_equivalent,14,02020202,4
+manual_sanity,nothing,14,00000000,4
+manual_sanity,open_front_left,14,01000000,4
+manual_sanity,open_front_right,14,00010000,4
+manual_sanity,open_rear_left,14,00000100,4
+manual_sanity,open_rear_right,14,00000001,4
+manual_sanity,close_front_left_only,14,02000000,4
+manual_sanity,close_front_right_only,14,00020000,4
+manual_sanity,close_rear_left_only,14,00000200,4
+manual_sanity,close_rear_right_only,14,00000002,4
+manual_sanity,mixed_open_close_1,14,01020102,4
+manual_sanity,mixed_open_close_2,14,02010201,4
+manual_sanity,invalid_enum_3_all,14,03030303,4
+manual_sanity,boundary_ff_all,14,ffffffff,4
+manual_sanity,truncated_two_open,14,0101,2

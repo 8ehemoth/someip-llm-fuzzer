@@ -1,0 +1,47 @@
+{
+  "file": "results/results_baseline_20260421_142753.csv",
+  "generated_at": "2026-04-21T14:28:59",
+  "total_cases": 30,
+  "mode_count": {
+    "baseline": 30
+  },
+  "verdict_count": {
+    "normal_response": 30
+  },
+  "retcode_count": {
+    "0x00": 30
+  },
+  "msg_type_count": {
+    "0x80": 30
+  },
+  "response_received_count": {
+    "True": 30
+  },
+  "latency_ms": {
+    "avg": 51.83,
+    "min": 33.57,
+    "max": 132.58
+  },
+  "methods": {
+    "1": {
+      "count": 30,
+      "avg_latency_ms": 51.83,
+      "min_latency_ms": 33.57,
+      "max_latency_ms": 132.58,
+      "retcode_count": {
+        "0x00": 30
+      },
+      "verdict_count": {
+        "normal_response": 30
+      },
+      "msg_type_count": {
+        "0x80": 30
+      },
+      "payloads": {}
+    }
+  },
+  "payloads": {},
+  "observations": [
+    "Observed methods: ['1']"
+  ]
+}

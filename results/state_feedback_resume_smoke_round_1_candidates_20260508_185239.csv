@@ -1,0 +1,16 @@
+payload_source,payload_label,method_id,method_name,getter_id,payload_hex,payload_len,round_index,generation_strategy,seed_payload_hex,feedback_note
+llm_feedback,m10_status_off_zero,10,setSeatHeatingStatus,9,00000000,4,1,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_on_u32,10,setSeatHeatingStatus,9,00000001,4,1,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_on_byte,10,setSeatHeatingStatus,9,01,1,1,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_off_byte,10,setSeatHeatingStatus,9,00,1,1,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m10_status_true_bool_pad,10,setSeatHeatingStatus,9,01000000,4,1,semantic_seed,,initial Method 10 structure coverage
+llm_feedback,m12_level_0_u32,12,setSeatHeatingLevel,11,00000000,4,1,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_1_u32,12,setSeatHeatingLevel,11,00000001,4,1,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_2_u32,12,setSeatHeatingLevel,11,00000002,4,1,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_3_u32,12,setSeatHeatingLevel,11,00000003,4,1,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m12_level_1_byte,12,setSeatHeatingLevel,11,01,1,1,semantic_seed,,initial Method 12 structure coverage
+llm_feedback,m14_baseline_open_all,14,changeDoorsState,8,01010101,4,1,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_reset_close_all,14,changeDoorsState,8,02020202,4,1,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_reset_expected_noop,14,changeDoorsState,8,00000000,4,1,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_front_left,14,changeDoorsState,8,01000000,4,1,semantic_seed,,initial Method 14 structure coverage
+llm_feedback,m14_open_front_right,14,changeDoorsState,8,00010000,4,1,semantic_seed,,initial Method 14 structure coverage

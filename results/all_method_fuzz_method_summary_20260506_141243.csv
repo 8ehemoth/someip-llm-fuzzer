@@ -1,0 +1,15 @@
+method_id,method_name,role,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,normal_response_rate,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,classification_counts,avg_latency_ms,max_latency_ms,p95_latency_ms
+1,getConsumptionAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,7.065,24.225,9.186
+2,getCapacityAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.854,9.900,8.228
+3,getVolumeAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.674,7.869,7.340
+4,getEngineSpeedAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.579,7.934,7.571
+5,getCurrentGearAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.978,7.517,7.318
+6,getIsReverseGearOnAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.510,9.376,7.130
+7,getDrivePowerTransmissionAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.357,17.735,6.782
+8,getDoorsOpeningStatusAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.448,7.660,6.881
+9,getSeatHeatingStatusAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.382,7.513,7.010
+10,setSeatHeatingStatusAttribute,setter,15,150,110,40,0,0.733333,90,90,9,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9,28.638,33.350,32.454
+11,getSeatHeatingLevelAttribute,getter,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.237,7.066,6.687
+12,setSeatHeatingLevelAttribute,setter,15,150,110,40,0,0.733333,90,90,9,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9,29.838,81.792,34.801
+13,initTirePressureCalibration,method,14,140,140,0,0,1.000000,0,0,0,protocol_valid_no_state_effect=14,6.209,7.890,6.470
+14,changeDoorsState,method,16,160,140,20,0,0.875000,100,100,10,protocol_valid_no_state_effect=4;rejected_or_error=2;reproducible_non_trivial_state_effect=10,28.442,39.556,32.009

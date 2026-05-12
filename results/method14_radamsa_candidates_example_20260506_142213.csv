@@ -1,0 +1,12 @@
+payload_source,payload_label,method_id,payload_hex,payload_len
+radamsa_example,truncated_one,14,01,1
+radamsa_example,truncated_two,14,0101,2
+radamsa_example,boundary_ff_all,14,ffffffff,4
+radamsa_example,invalid_enum_3_all,14,03030303,4
+radamsa_example,long_one_extra_zero,14,0101010100,5
+radamsa_example,long_padding_ff,14,01010101ffffffff,8
+radamsa_example,long_prefix_zero,14,00000001010101,7
+radamsa_example,deterministic_random4_01,14,19cc223e,4
+radamsa_example,deterministic_random4_02,14,c880aaf6,4
+radamsa_example,deterministic_random4_03,14,7874bffa,4
+radamsa_example,deterministic_random4_04,14,f135fa63,4

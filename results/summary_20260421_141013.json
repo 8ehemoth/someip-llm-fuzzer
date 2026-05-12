@@ -1,0 +1,235 @@
+{
+  "file": "results/results_payload_focus_20260421_125323.csv",
+  "generated_at": "2026-04-21T14:10:13",
+  "total_cases": 12,
+  "mode_count": {
+    "fuzz": 12
+  },
+  "verdict_count": {
+    "error_response": 12
+  },
+  "retcode_count": {
+    "0x09": 12
+  },
+  "msg_type_count": {
+    "0x81": 12
+  },
+  "response_received_count": {
+    "True": 12
+  },
+  "latency_ms": {
+    "avg": 51.59,
+    "min": 37.45,
+    "max": 86.55
+  },
+  "methods": {
+    "10": {
+      "count": 6,
+      "avg_latency_ms": 54.51,
+      "min_latency_ms": 40.95,
+      "max_latency_ms": 86.55,
+      "retcode_count": {
+        "0x09": 6
+      },
+      "verdict_count": {
+        "error_response": 6
+      },
+      "msg_type_count": {
+        "0x81": 6
+      },
+      "payloads": {
+        "empty": {
+          "payload_len": 0,
+          "payload_hex": "",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 86.55
+        },
+        "zero_1": {
+          "payload_len": 1,
+          "payload_hex": "00",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 44.84
+        },
+        "zero_2": {
+          "payload_len": 2,
+          "payload_hex": "0000",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 49.38
+        },
+        "ff_1": {
+          "payload_len": 1,
+          "payload_hex": "ff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 40.95
+        },
+        "inc_4": {
+          "payload_len": 4,
+          "payload_hex": "01020304",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 56.59
+        },
+        "ff_4": {
+          "payload_len": 4,
+          "payload_hex": "ffffffff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 48.73
+        }
+      }
+    },
+    "12": {
+      "count": 6,
+      "avg_latency_ms": 48.67,
+      "min_latency_ms": 37.45,
+      "max_latency_ms": 63.86,
+      "retcode_count": {
+        "0x09": 6
+      },
+      "verdict_count": {
+        "error_response": 6
+      },
+      "msg_type_count": {
+        "0x81": 6
+      },
+      "payloads": {
+        "empty": {
+          "payload_len": 0,
+          "payload_hex": "",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 45.38
+        },
+        "zero_1": {
+          "payload_len": 1,
+          "payload_hex": "00",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 37.45
+        },
+        "zero_2": {
+          "payload_len": 2,
+          "payload_hex": "0000",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 63.86
+        },
+        "ff_1": {
+          "payload_len": 1,
+          "payload_hex": "ff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 54.46
+        },
+        "inc_4": {
+          "payload_len": 4,
+          "payload_hex": "01020304",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 49.55
+        },
+        "ff_4": {
+          "payload_len": 4,
+          "payload_hex": "ffffffff",
+          "retcode": "0x09",
+          "verdict": "error_response",
+          "latency_ms": 41.3
+        }
+      }
+    }
+  },
+  "payloads": {
+    "empty": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 65.97,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "ff_1": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 47.7,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "ff_4": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 45.02,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "inc_4": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 53.07,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "zero_1": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 41.15,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    },
+    "zero_2": {
+      "count": 2,
+      "methods": [
+        "10",
+        "12"
+      ],
+      "avg_latency_ms": 56.62,
+      "retcode_count": {
+        "0x09": 2
+      },
+      "verdict_count": {
+        "error_response": 2
+      }
+    }
+  },
+  "observations": [
+    "Observed methods: ['10', '12']",
+    "Stable error-only methods: 10:0x09, 12:0x09"
+  ]
+}

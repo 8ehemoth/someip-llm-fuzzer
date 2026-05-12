@@ -1,0 +1,15 @@
+method_id,method_name,role,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,unique_payload_count,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,avg_latency_ms,max_latency_ms,p95_latency_ms,classification_counts
+1,getConsumptionAttribute,getter,14,140,140,0,0,14,0,0,0,7.065,24.225,9.186,protocol_valid_no_state_effect=14
+2,getCapacityAttribute,getter,14,140,140,0,0,14,0,0,0,6.854,9.900,8.228,protocol_valid_no_state_effect=14
+3,getVolumeAttribute,getter,14,140,140,0,0,14,0,0,0,6.674,7.869,7.340,protocol_valid_no_state_effect=14
+4,getEngineSpeedAttribute,getter,14,140,140,0,0,14,0,0,0,6.579,7.934,7.571,protocol_valid_no_state_effect=14
+5,getCurrentGearAttribute,getter,14,140,140,0,0,14,0,0,0,6.978,7.517,7.318,protocol_valid_no_state_effect=14
+6,getIsReverseGearOnAttribute,getter,14,140,140,0,0,14,0,0,0,6.510,9.376,7.130,protocol_valid_no_state_effect=14
+7,getDrivePowerTransmissionAttribute,getter,14,140,140,0,0,14,0,0,0,6.357,17.735,6.782,protocol_valid_no_state_effect=14
+8,getDoorsOpeningStatusAttribute,getter,14,140,140,0,0,14,0,0,0,6.448,7.660,6.881,protocol_valid_no_state_effect=14
+9,getSeatHeatingStatusAttribute,getter,14,140,140,0,0,14,0,0,0,6.382,7.513,7.010,protocol_valid_no_state_effect=14
+10,setSeatHeatingStatusAttribute,setter,15,150,110,40,0,15,90,90,9,28.638,33.350,32.454,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9
+11,getSeatHeatingLevelAttribute,getter,14,140,140,0,0,14,0,0,0,6.237,7.066,6.687,protocol_valid_no_state_effect=14
+12,setSeatHeatingLevelAttribute,setter,15,150,110,40,0,15,90,90,9,29.838,81.792,34.801,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9
+13,initTirePressureCalibration,method,14,140,140,0,0,14,0,0,0,6.209,7.890,6.470,protocol_valid_no_state_effect=14
+14,changeDoorsState,method,16,160,140,20,0,16,100,100,10,28.442,39.556,32.009,protocol_valid_no_state_effect=4;rejected_or_error=2;reproducible_non_trivial_state_effect=10

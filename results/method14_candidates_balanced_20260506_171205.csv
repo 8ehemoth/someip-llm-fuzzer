@@ -1,0 +1,21 @@
+payload_source,payload_label,method_id,payload_hex,payload_len,generation_strategy,seed_payload_hex,note
+llm_real,noop_noop_noop_noop,14,00000000,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,open_open_open_open,14,01010101,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,close_close_close_close,14,02020202,4,semantic_all_door_command_combination,,four door command bytes
+llm_real,noop_invalid3_close_invalid3,14,00030203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,noop_noop_boundaryff_boundaryff,14,0000ffff,4,semantic_boundary_command_included,,four door command bytes
+llm_real,close_noop_close_invalid3,14,02000203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,open_close_close_invalid3,14,01020203,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,close_noop_noop_invalid3,14,02000003,4,semantic_invalid_enum_included,,four door command bytes
+llm_real,open_boundaryff_boundaryff_close,14,01ffff02,4,semantic_boundary_command_included,,four door command bytes
+llm_real,open_invalid3_noop_invalid3,14,01030003,4,semantic_invalid_enum_included,,four door command bytes
+radamsa_real,seed_01010101,14,01010101,4,seed,01010101,
+radamsa_real,seed_02020202,14,02020202,4,seed,02020202,
+radamsa_real,seed_00000000,14,00000000,4,seed,00000000,
+radamsa_real,deterministic_random_5,14,472737f5c3,5,deterministic_random_bytes,,radamsa-like random mutation
+radamsa_real,bit_flip_01010101_10,14,01010501,4,bit_flip,01010101,
+radamsa_real,boundary_zero_fill_15,14,000000000000000000000000000000,15,boundary_fill,00000000,
+radamsa_real,byte_flip_01010101_0_254,14,fe010101,4,byte_flip,01010101,
+radamsa_real,deterministic_random_18,14,c60e3ad208ce5066441036e9,12,deterministic_random_bytes,,radamsa-like random mutation
+radamsa_real,deterministic_random_34,14,f21415bb7cd011fac2,9,deterministic_random_bytes,,radamsa-like random mutation
+radamsa_real,seed_concat_open_00000000,14,0000000001010101,8,seed_concat,00000000,

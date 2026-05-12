@@ -1,0 +1,112 @@
+{
+  "llm_file": "results/results_llm_plan_20260421_144310.csv",
+  "radamsa_file": "results/results_radamsa_20260421_142923.csv",
+  "llm_summary": {
+    "total_cases": 9,
+    "verdict_count": {
+      "normal_response": 8,
+      "error_response": 1
+    },
+    "retcode_count": {
+      "0x00": 8,
+      "0x09": 1
+    },
+    "msg_type_count": {
+      "0x80": 8,
+      "0x81": 1
+    },
+    "method_count": {
+      "10": 9
+    },
+    "payload_source_count": {
+      "llm": 9
+    },
+    "unique_retcode_count": 2,
+    "unique_msg_type_count": 2,
+    "unique_method_retcode_verdict_count": 2,
+    "avg_latency_ms": 51.07,
+    "min_latency_ms": 38.11,
+    "max_latency_ms": 87.24,
+    "methods": {
+      "10": {
+        "count": 9,
+        "retcodes": {
+          "0x00": 8,
+          "0x09": 1
+        },
+        "verdicts": {
+          "normal_response": 8,
+          "error_response": 1
+        },
+        "payload_sources": {
+          "llm": 9
+        },
+        "avg_latency_ms": 51.07,
+        "min_latency_ms": 38.11,
+        "max_latency_ms": 87.24
+      }
+    }
+  },
+  "radamsa_summary": {
+    "total_cases": 10,
+    "verdict_count": {
+      "error_response": 9,
+      "normal_response": 1
+    },
+    "retcode_count": {
+      "0x09": 9,
+      "0x00": 1
+    },
+    "msg_type_count": {
+      "0x81": 9,
+      "0x80": 1
+    },
+    "method_count": {
+      "10": 5,
+      "12": 5
+    },
+    "payload_source_count": {
+      "radamsa": 10
+    },
+    "unique_retcode_count": 2,
+    "unique_msg_type_count": 2,
+    "unique_method_retcode_verdict_count": 3,
+    "avg_latency_ms": 49.29,
+    "min_latency_ms": 37.55,
+    "max_latency_ms": 73.54,
+    "methods": {
+      "10": {
+        "count": 5,
+        "retcodes": {
+          "0x09": 4,
+          "0x00": 1
+        },
+        "verdicts": {
+          "error_response": 4,
+          "normal_response": 1
+        },
+        "payload_sources": {
+          "radamsa": 5
+        },
+        "avg_latency_ms": 52.03,
+        "min_latency_ms": 37.55,
+        "max_latency_ms": 73.54
+      },
+      "12": {
+        "count": 5,
+        "retcodes": {
+          "0x09": 5
+        },
+        "verdicts": {
+          "error_response": 5
+        },
+        "payload_sources": {
+          "radamsa": 5
+        },
+        "avg_latency_ms": 46.55,
+        "min_latency_ms": 44.78,
+        "max_latency_ms": 48.16
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+source_file,payload_source,payload_label,req_method_id,req_payload_len,req_payload_hex,rsp_msg_type,rsp_retcode,verdict,response_time_ms
+manual_commonapi_encoding,baseline,set_status_true_false_alt,10,11,0000000701000100010001,,,,
+manual_commonapi_encoding,baseline,set_level_1_2_3_0_1_2_3,12,11,0000000701020300010203,,,,

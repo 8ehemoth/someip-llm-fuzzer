@@ -1,0 +1,19 @@
+[2026-04-28 14:13:09] demo mode: replay
+[2026-04-28 14:13:09] server target: server@192.168.40.134 pid 7736
+[2026-04-28 14:13:09] resource csv: results/demo/server_resource_replay_20260428_141309.csv
+[2026-04-28 14:13:09] experiment csv: results/demo/experiment_replay_20260428_141309.csv
+[2026-04-28 14:13:09] log file: results/demo/demo_replay_20260428_141309.log
+[2026-04-28 14:13:09] running command: /home/client/miniconda3/envs/someipfuzz/bin/python scripts/replay_candidates.py --candidates results/replay_candidates_llm.jsonl --out results/demo/experiment_replay_20260428_141309.csv --repeat 30
+[2026-04-28 14:13:10] wrote: results/demo/experiment_replay_20260428_141309.csv
+[2026-04-28 14:13:10] summary
+[2026-04-28 14:13:10] total_trials=30
+[2026-04-28 14:13:10] normal_response_count=30
+[2026-04-28 14:13:10] error_response_count=0
+[2026-04-28 14:13:10] timeout_count=0
+[2026-04-28 14:13:10] malformed_response_count=0
+[2026-04-28 14:13:10] avg_latency_ms=8.263
+[2026-04-28 14:13:10] max_latency_ms=26.411
+[2026-04-28 14:13:10] p95_latency_ms=17.668
+[2026-04-28 14:13:10] resource samples written: 1
+[2026-04-28 14:13:10] experiment exit code: 0
+[2026-04-28 14:13:10] done

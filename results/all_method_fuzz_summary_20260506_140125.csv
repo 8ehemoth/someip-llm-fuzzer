@@ -1,0 +1,15 @@
+method_id,method_name,role,total_candidates,total_trials,normal_response_count,error_response_count,timeout_count,unique_payload_count,state_changed_count,non_trivial_state_effect_count,reproducible_non_trivial_state_effect_count,avg_latency_ms,max_latency_ms,p95_latency_ms,classification_counts
+1,getConsumptionAttribute,getter,14,42,42,0,0,14,0,0,0,6.272,6.660,6.491,protocol_valid_no_state_effect=14
+2,getCapacityAttribute,getter,14,42,42,0,0,14,0,0,0,6.459,7.216,6.689,protocol_valid_no_state_effect=14
+3,getVolumeAttribute,getter,14,42,42,0,0,14,0,0,0,6.670,7.594,6.973,protocol_valid_no_state_effect=14
+4,getEngineSpeedAttribute,getter,14,42,42,0,0,14,0,0,0,6.545,6.980,6.863,protocol_valid_no_state_effect=14
+5,getCurrentGearAttribute,getter,14,42,42,0,0,14,0,0,0,6.459,6.839,6.792,protocol_valid_no_state_effect=14
+6,getIsReverseGearOnAttribute,getter,14,42,42,0,0,14,0,0,0,6.170,6.554,6.412,protocol_valid_no_state_effect=14
+7,getDrivePowerTransmissionAttribute,getter,14,42,42,0,0,14,0,0,0,6.314,6.721,6.599,protocol_valid_no_state_effect=14
+8,getDoorsOpeningStatusAttribute,getter,14,42,42,0,0,14,0,0,0,6.202,7.120,6.457,protocol_valid_no_state_effect=14
+9,getSeatHeatingStatusAttribute,getter,14,42,42,0,0,14,0,0,0,6.809,8.258,8.128,protocol_valid_no_state_effect=14
+10,setSeatHeatingStatusAttribute,setter,15,45,33,12,0,15,27,27,9,29.721,35.806,33.294,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9
+11,getSeatHeatingLevelAttribute,getter,14,42,42,0,0,14,0,0,0,6.832,7.323,7.167,protocol_valid_no_state_effect=14
+12,setSeatHeatingLevelAttribute,setter,15,45,33,12,0,15,27,27,9,29.481,39.359,34.900,protocol_valid_no_state_effect=2;rejected_or_error=4;reproducible_non_trivial_state_effect=9
+13,initTirePressureCalibration,method,14,42,42,0,0,14,0,0,0,6.319,6.863,6.593,protocol_valid_no_state_effect=14
+14,changeDoorsState,method,16,48,42,6,0,16,30,30,10,34.094,124.124,69.334,protocol_valid_no_state_effect=4;rejected_or_error=2;reproducible_non_trivial_state_effect=10

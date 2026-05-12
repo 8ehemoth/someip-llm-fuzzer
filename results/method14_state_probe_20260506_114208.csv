@@ -1,0 +1,4 @@
+timestamp,candidate_label,method14_payload_hex,getter_before_payload_hex,method14_response_received,method14_msg_type,method14_retcode,method14_verdict,getter_after_payload_hex,state_changed,error
+11:42:08.722,open_all,01010101,00000000,True,0x80,0x00,normal_response,01010101,True,
+11:42:08.743,close_all,02020202,01010101,True,0x80,0x00,normal_response,00000000,True,
+11:42:08.764,nothing,00000000,00000000,True,0x80,0x00,normal_response,00000000,False,

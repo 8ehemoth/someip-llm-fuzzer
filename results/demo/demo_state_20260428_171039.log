@@ -1,0 +1,20 @@
+[2026-04-28 17:10:39] demo mode: state
+[2026-04-28 17:10:39] server target: server@192.168.40.134 pid 8534
+[2026-04-28 17:10:39] resource csv: results/demo/server_resource_state_20260428_171039.csv
+[2026-04-28 17:10:39] experiment csv: results/demo/experiment_state_20260428_171039.csv
+[2026-04-28 17:10:39] log file: results/demo/demo_state_20260428_171039.log
+[2026-04-28 17:10:39] running command: /home/client/miniconda3/envs/someipfuzz/bin/python scripts/check_candidate_state_effect_verbose.py --candidates results/replay_candidates_llm.jsonl --out results/demo/experiment_state_20260428_171039.csv --repeat 10
+[2026-04-28 17:10:40] wrote: results/demo/experiment_state_20260428_171039.csv
+[2026-04-28 17:10:40] summary
+[2026-04-28 17:10:40] total_trials=10
+[2026-04-28 17:10:40] setter_normal_count=10
+[2026-04-28 17:10:40] getter_success_count=10
+[2026-04-28 17:10:40] state_changed_count=1
+[2026-04-28 17:10:40] state_unchanged_count=9
+[2026-04-28 17:10:40] unknown_count=0
+[2026-04-28 17:10:40] unique_before_payloads=2
+[2026-04-28 17:10:40] unique_after_payloads=1
+[2026-04-28 17:10:40] unique_setter_response_payloads=1
+[2026-04-28 17:10:40] resource samples written: 1
+[2026-04-28 17:10:40] experiment exit code: 0
+[2026-04-28 17:10:40] done
