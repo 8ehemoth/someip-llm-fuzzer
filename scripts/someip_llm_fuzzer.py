@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SOME/IP LLM Fuzzer with hybrid local and optional OpenAI guidance.
+"""SOME/IP LLM Fuzzer with OpenAI-guided and local hybrid feedback.
 
 The current default profile targets Method 14, but the workflow and report
 structure are intended for state-effect fuzzing campaigns more broadly.
@@ -653,7 +653,7 @@ def call_openai_candidates(args, method_id, round_index, context, dashboard=None
         raise RuntimeError("OPENAI_API_KEY is not set")
     model = args.model or os.environ.get("OPENAI_MODEL", "").strip()
     if not model:
-        raise RuntimeError("--model or OPENAI_MODEL is required with --use-openai-api")
+        raise RuntimeError("--model or OPENAI_MODEL is required when OpenAI planning is enabled")
     client = OpenAI(api_key=api_key)
     prompt = build_prompt(method_id, round_index, args.candidates_per_round, context)
     stop_event = threading.Event()
@@ -1353,8 +1353,8 @@ def parse_args():
     parser.add_argument("--hybrid-llm-call-cap", type=int, default=env_int("SOMEIP_LLM_HYBRID_LLM_CALL_CAP", 10))
     parser.add_argument("--hybrid-stagnation-payloads", type=int, default=env_int("SOMEIP_LLM_HYBRID_STAGNATION_PAYLOADS", 200))
     openai_group = parser.add_mutually_exclusive_group()
-    openai_group.add_argument("--use-openai-api", dest="use_openai_api", action="store_true")
-    openai_group.add_argument("--no-openai-api", dest="use_openai_api", action="store_false")
+    openai_group.add_argument("--use-openai-api", dest="use_openai_api", action="store_true", help="Enable OpenAI planning. This is the default when SOMEIP_LLM_USE_OPENAI=1 or OPENAI_API_KEY is set.")
+    openai_group.add_argument("--no-openai-api", dest="use_openai_api", action="store_false", help="Disable OpenAI planning and use local generation only.")
     parser.set_defaults(use_openai_api=default_use_openai)
     parser.add_argument("--model", default=os.environ.get("OPENAI_MODEL", ""))
     mode_group = parser.add_mutually_exclusive_group()
@@ -1558,7 +1558,7 @@ def main():
     dashboard_state["output"] = report_path
     dashboard.render(dashboard_state, force=True)
     if not args.execute:
-        print("dry-run only: no replay was executed and no OpenAI API call was made unless --use-openai-api was provided")
+        print("dry-run only: no replay was executed")
 
 
 if __name__ == "__main__":

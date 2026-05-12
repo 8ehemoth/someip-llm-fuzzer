@@ -370,7 +370,7 @@ Client VM의 `~/someip-llm-fuzzer`에서 실행합니다.
 cp .env.example .env
 ```
 
-OpenAI planner를 사용할 경우 `.env`에 다음 값을 설정합니다.
+SOME/IP LLM Fuzzer는 기본적으로 OpenAI planner를 사용합니다. `.env`에는 다음 값을 설정합니다.
 
 ```dotenv
 OPENAI_API_KEY=...
@@ -388,6 +388,7 @@ SOMEIP_LLM_EXECUTE=0
 
 - Dry-run에서는 `SOMEIP_LLM_EXECUTE=0`을 유지합니다.
 - Server VM이 실행 중이고 네트워크 통신이 확인된 뒤에만 `SOMEIP_LLM_EXECUTE=1` 또는 `--execute`를 사용합니다.
+- OpenAI를 끄고 local mutation만 사용하려면 `SOMEIP_LLM_USE_OPENAI=0` 또는 `--no-openai-api`를 사용합니다.
 - API key는 코드, README, 결과 파일, 커밋 메시지에 hardcode하지 않습니다.
 - 실제 `.env`는 git에 올리지 않습니다.
 - 이 저장소의 `.gitignore`는 `.env`, `.env.*`, 하위 디렉터리의 `.env` 파일을 제외하고 `.env.example`만 허용합니다.
@@ -469,7 +470,7 @@ cd ~/someip-llm-fuzzer
 
 30분처럼 wall-clock 기준으로 계속 실행하려면 `--duration-sec`를 사용합니다.
 이 옵션과 `--execute`를 같이 쓰면 기본적으로 hybrid feedback mode가 켜집니다.
-Hybrid mode는 replay 결과를 즉시 local mutation queue에 반영하고, OpenAI를 사용할 경우 3분마다 최대 10회까지만 새 seed를 요청합니다.
+Hybrid mode는 replay 결과를 즉시 local mutation queue에 반영하고, OpenAI seed 요청은 기본적으로 3분마다 최대 10회까지만 수행합니다.
 
 ```bash
 ../miniconda3/envs/someipfuzz/bin/python scripts/someip_llm_fuzzer.py \
@@ -478,25 +479,24 @@ Hybrid mode는 replay 결과를 즉시 local mutation queue에 반영하고, Ope
   --trial-count 3 \
   --final-trial-count 10 \
   --duration-sec 30m \
+  --model gpt-4.1-mini \
   --execute
 ```
 
 기존 round 단위 실행으로 되돌리려면 `--no-hybrid-feedback`를 추가합니다.
 
-### 8.4 OpenAI-guided Run
+### 8.4 Local-only Run
 
-OpenAI-guided planning을 사용할 경우 다음과 같이 실행합니다.
+OpenAI API 비용 없이 deterministic seed와 local hybrid mutation만 사용하려면 다음과 같이 실행합니다.
 
 ```bash
-OPENAI_API_KEY=... \
 ../miniconda3/envs/someipfuzz/bin/python scripts/someip_llm_fuzzer.py \
   --target-methods 10,12,14 \
-  --rounds 3 \
   --candidates-per-round 50 \
   --trial-count 3 \
   --final-trial-count 10 \
-  --use-openai-api \
-  --model gpt-4.1-mini \
+  --duration-sec 30m \
+  --no-openai-api \
   --execute
 ```
 
@@ -704,7 +704,7 @@ Replay 없이 확인만 하려면 `--execute` 대신 `--dry-run`을 사용합니
 
 | Script | 역할 |
 |---|---|
-| `scripts/someip_llm_fuzzer.py` | 메인 SOME/IP LLM Fuzzer입니다. Round별 candidate 생성, optional OpenAI 호출, optional replay, feedback 분석, 최종 report 생성을 수행합니다. 현재 기본 프로파일은 Method 14입니다. |
+| `scripts/someip_llm_fuzzer.py` | 메인 SOME/IP LLM Fuzzer입니다. Round별 candidate 생성, OpenAI-guided planning, optional replay, feedback 분석, 최종 report 생성을 수행합니다. 현재 기본 프로파일은 Method 14입니다. |
 | `scripts/compare_state_fuzzers.py` | state-effect 프로파일에 대한 공통 replay/summary 로직과 LLM vs Radamsa 비교를 수행합니다. |
 | `scripts/check_candidate_state_effect.py` | Replay path에서 사용하는 low-level SOME/IP call helper입니다. Packet build/send/receive helper와 session ID handling을 제공합니다. |
 | `scripts/someip_transport.py` | Playground service용 최소 SOME/IP packet 생성 및 response parsing helper입니다. |
