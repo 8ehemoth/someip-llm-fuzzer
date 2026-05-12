@@ -23,7 +23,7 @@
       ┌───────────────────────────────┐        ┌───────────────────────────────┐
       │ Client VM                     │        │ Server VM                     │
       │  - Directory:                 │        │  - Directory:                 │
-      │    someip-llm-fuzzer/    │        │    test-someip-service/       │
+      │    someip-llm-fuzzer/         │        │    test-someip-service/       │
       │  - IP: 192.168.40.135         │ <----> │  - IP: 192.168.40.134         │
       │  - UDP port: 58423            │        │  - UDP port: 31000            │
       │  - SOME/IP LLM Fuzzer         │        │  - PlaygroundService          │
@@ -622,43 +622,7 @@ python -m pip install -r requirements.txt
 
 ---
 
-## 17. test-someip-service 정리
-
-가져온 `test-someip-service` directory는 rebuild와 rerun에 필요한 source/configuration만 유지하도록 정리했습니다.
-
-아래 imported runtime artifact는 삭제하지 않고 이동했습니다.
-
-```text
-test-someip-service/legacy_artifacts/imported_runtime/
-```
-
-이동한 항목:
-
-- nested imported Git metadata
-- old `build/`
-- old `commonapi-wrappers/build/`
-- server replay logs
-- `.swp` and `.backup` files
-
-활성 service tree에 유지한 항목:
-
-```text
-CMakeLists.txt
-src/
-include/
-franca/
-commonapi-wrappers/generated/
-commonapi-wrappers/include/
-commonapi-wrappers/playground/include/
-commonapi-wrappers/playground/lib/
-vsomeip-server-remote.json
-vsomeip.json
-server.sh
-```
-
----
-
-## 18. 재현성 메모
+## 17. 재현성 메모
 
 실험 결과를 비교할 수 있도록 아래 파일을 보관합니다.
 
